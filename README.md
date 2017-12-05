@@ -9,12 +9,36 @@ Directions to export data sets from MatLab to Unity
 
 
 
+fid = fopen('cascadia.dat', 'a+');
+
+
+lat = srModel.LAT
+Q = lat(:)
+b=size(lat,1) * size(lat,2)
+
+fprintf(fid, '%d %d\n', [size(lat, 1), size(lat, 2)]);
+
+for b=1:size(Q)
+  fprintf(fid, '%d\n', Q(b));
+end
+
+
+
+lon = srModel.LON
+Q = lon(:)
+b=size(lon,1) * size(lon,2)
+
+fprintf(fid, '%d %d\n', [size(lon, 1), size(lon, 2)]);
+
+for b=1:size(Q)
+  fprintf(fid, '%d\n', Q(b));
+end
+
+
 elev = srModel.elevation;
 
 Q = elev(:)
 b=size(elev,1) * size(elev,2)
-
-fid = fopen('dimen.dat', 'a+');
 
 fprintf(fid, '%d %d\n', [size(elev, 1), size(elev, 2)]);
 

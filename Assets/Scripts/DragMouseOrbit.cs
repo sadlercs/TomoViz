@@ -31,7 +31,11 @@ public class DragMouseOrbit : MonoBehaviour
         rotationYAxis = 0f;
     }
     
-
+    public void SetRotation(float xAxis, float yAxis)
+    {
+        rotationXAxis = xAxis;
+        rotationYAxis = yAxis;
+    } 
 
     public void SetDistance(float d)
     {

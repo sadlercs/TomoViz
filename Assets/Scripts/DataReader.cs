@@ -10,6 +10,7 @@ public class DataReader : MonoBehaviour {
 
     public struct Data
     {
+        public Vector2 [,] latlong;
         public float[,] elev;
         public int[] eledim;
 
@@ -40,6 +41,11 @@ public class DataReader : MonoBehaviour {
     private int xMax = 0;
     private int yMax = 0;
     private int zMax = 0;
+
+
+    float scale = 10f;
+    private Vector2 lonRange;
+    private Vector2 latRange;
 
     private float elevationScale = 1f;
     Vector2Int xB, yB, zB;
@@ -107,10 +113,20 @@ public class DataReader : MonoBehaviour {
 
     public void SnapToBB()
     {
+        bool lonLatView = true;
 
-        Vector3 newPos = (snap_toggle.isOn) ? new Vector3(-xMax * .5f, zMax * .5f, -yMax * .5f) :
+        Vector3 newPos;
+        if (lonLatView)
+        {
+            newPos = (snap_toggle.isOn) ? new Vector3(-(latRange.x + (latRange.y - latRange.x) * .5f) * scale, zMax * .5f, -(lonRange.x + (lonRange.y - lonRange.x) * .5f) * scale) :
+                        new Vector3(-(latRange.x + (latRange.y - latRange.x) * (yB.y - yB.x)/yMax * .5f) * scale, zMax * .5f, -(lonRange.x + (lonRange.y - lonRange.x) * (xB.y - xB.x) / xMax * .5f) * scale);
+        }
+        else
+        {
+            newPos = (snap_toggle.isOn) ? new Vector3(-xMax * .5f, zMax * .5f, -yMax * .5f) :
             new Vector3(-(xB.y - xB.x) * .5f, (zB.y - zB.x) * .5f, -(yB.y - yB.x) * .5f);
-
+        }
+       
                  
         for (int i = 0; i < 6; ++i)
         {
@@ -162,7 +178,8 @@ public class DataReader : MonoBehaviour {
     {
         Debug.Log("Loading Data");
 
-
+        lonRange = new Vector2(float.MaxValue, float.MinValue);
+        latRange = new Vector2(float.MaxValue, float.MinValue);
         /*
         WWW file_get = new WWW(Application.dataPath + "/Resources/" + fileName); // Resources Folder Version
 
@@ -176,11 +193,71 @@ public class DataReader : MonoBehaviour {
         StreamReader inp_stm = new StreamReader(Application.dataPath + "/Resources/" + fileName);
 
 
-        // Get Elevation Data
+
+        // Get Latitude data
 
         string inp_ln = inp_stm.ReadLine();
-
         List<string> dimens = new List<string>(inp_ln.Split(' '));
+
+        
+        if (dimens.Count == 2)
+        {
+            data.latlong = new Vector2[Convert.ToInt32(dimens[0]), Convert.ToInt32(dimens[1])];
+            
+            int x = Convert.ToInt32(dimens[0]);
+            int y = Convert.ToInt32(dimens[1]);
+
+            // MatLab is column major order -> z,y,x
+            for (int i = 0; i < y; ++i)
+            {
+                for (int j = 0; j < x; ++j)
+                {
+                    float val = Convert.ToSingle(inp_stm.ReadLine());
+                    data.latlong[j, i].x = val;
+                    if (val < latRange.x) latRange.x = val; else if (val > latRange.y) latRange.y = val;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("Latitude dimensions are not correct: " + dimens.Count);
+        }
+
+        // Get Longitude data
+
+        inp_ln = inp_stm.ReadLine();
+        dimens = new List<string>(inp_ln.Split(' '));
+
+
+        if (dimens.Count == 2)
+        {
+            
+            int x = Convert.ToInt32(dimens[0]);
+            int y = Convert.ToInt32(dimens[1]);
+
+            // MatLab is column major order -> z,y,x
+            for (int i = 0; i < y; ++i)
+            {
+                for (int j = 0; j < x; ++j)
+                {
+                    float val = Convert.ToSingle(inp_stm.ReadLine());
+                    data.latlong[j, i].y = val;
+                    if (val < lonRange.x) lonRange.x = val; else if (val > lonRange.y) lonRange.y = val;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("Longitude dimensions are not correct: " + dimens.Count);
+        }
+
+        Debug.Log("latRange: " + latRange);
+        Debug.Log("lonRange: " + lonRange);
+        // Get Elevation Data
+
+
+        inp_ln = inp_stm.ReadLine();
+        dimens = new List<string>(inp_ln.Split(' '));
 
 
         if (dimens.Count == 2)
@@ -198,11 +275,12 @@ public class DataReader : MonoBehaviour {
             //Populate data matrix O(n^3)
 
             xMax = data.eledim[0];
-            Debug.Log("xMax: " + xMax);
+            //Debug.Log("xMax: " + xMax);
             yMax = data.eledim[1];
-            Debug.Log("yMax: " + yMax);
+            //Debug.Log("yMax: " + yMax);
 
             data.elev = new float[xMax, yMax];
+            
             
             // MatLab is column major order -> z,y,x
             for (int i = 0; i < yMax; ++i)
@@ -223,7 +301,6 @@ public class DataReader : MonoBehaviour {
         //file_get.Dispose();
 
         inp_ln = inp_stm.ReadLine();
-
         dimens = new List<string>(inp_ln.Split(' '));
 
 
@@ -369,6 +446,7 @@ public class DataReader : MonoBehaviour {
 
         //Debug.Log("hSize: " + hSize);
         //Debug.Log("wSize: " + wSize);
+
         
 
         int xMax1 = xB.y - 1;
@@ -396,15 +474,14 @@ public class DataReader : MonoBehaviour {
         Color[] colors = new Color[size];
 
         
-        // North Side
-
         if (face == 0)
         {
             for (int i = 0, y = yB.x; y <= hSize; y++)
             {
                 for (int x = xB.x; x <= wSize; x++, i++)
                 {
-                    vertices[i] = new Vector3(x, zB.x + data.elev[x,y] * elevationScale, y);
+                    vertices[i] = new Vector3(data.latlong[x, y].x * scale, zB.x + data.elev[x, y] * elevationScale, data.latlong[x, y].y * scale);
+                    //vertices[i] = new Vector3(x, zB.x + data.elev[x, y] * elevationScale, y);
                     colors[i] = data.colors[x, y, zB.x];
                 }
             }
@@ -415,7 +492,8 @@ public class DataReader : MonoBehaviour {
             {
                 for (int x = xB.x; x <= wSize; x++, i++)
                 {
-                    vertices[i] = new Vector3(x, -zMax1 + data.elev[x, y] * elevationScale, y);
+                    vertices[i] = new Vector3(data.latlong[x, y].x * scale, -zMax1 + data.elev[x, y] * elevationScale, data.latlong[x, y].y * scale);
+                    //vertices[i] = new Vector3(x, -zMax1 + data.elev[x, y] * elevationScale, y);
                     colors[i] = data.colors[x, y, zMax1];
                 }
             }
@@ -426,7 +504,8 @@ public class DataReader : MonoBehaviour {
             {
                 for (int x = zB.x; x <= wSize; x++, i++)
                 {
-                    vertices[i] = new Vector3(xB.x, -x + data.elev[xB.x, y] * elevationScale, y);
+                    vertices[i] = new Vector3(data.latlong[xB.x, y].x * scale, -x + data.elev[xB.x, y] * elevationScale, data.latlong[xB.x, y].y * scale);
+                    //vertices[i] = new Vector3(xB.x, -x + data.elev[xB.x, y] * elevationScale, y);
                     colors[i] = data.colors[xB.x, y, x];
                 }
             }
@@ -437,7 +516,8 @@ public class DataReader : MonoBehaviour {
             {
                 for (int x = zB.x; x <= wSize; x++, i++)
                 {
-                    vertices[i] = new Vector3(xMax1, -x + data.elev[xMax1, y] * elevationScale, y);
+                    vertices[i] = new Vector3(data.latlong[xMax1, y].x * scale, -x + data.elev[xMax1, y] * elevationScale, data.latlong[xMax1, y].y * scale);
+                    //vertices[i] = new Vector3(xMax1, -x + data.elev[xMax1, y] * elevationScale, y);
                     colors[i] = data.colors[xMax1, y, x];
                 }
             }
@@ -449,7 +529,8 @@ public class DataReader : MonoBehaviour {
             {
                 for (int x = zB.x; x <= wSize; x++, i++)
                 {
-                    vertices[i] = new Vector3(y, -x + data.elev[y, yB.x] * elevationScale, yB.x);
+                    vertices[i] = new Vector3(data.latlong[y, yB.x].x * scale, -x + data.elev[y, yB.x] * elevationScale, data.latlong[y, yB.x].y * scale);
+                    //vertices[i] = new Vector3(y, -x + data.elev[y, yB.x] * elevationScale, yB.x);
                     colors[i] = data.colors[y, yB.x, x];
                 }
             }
@@ -461,7 +542,8 @@ public class DataReader : MonoBehaviour {
             {
                 for (int x = zB.x; x <= wSize; x++, i++)
                 {
-                    vertices[i] = new Vector3(y, -x + data.elev[y, yMax1] * elevationScale, yMax1);
+                    vertices[i] = new Vector3(data.latlong[y, yMax1].x * scale, -x + data.elev[y, yMax1] * elevationScale, data.latlong[y, yMax1].y * scale);
+                    //vertices[i] = new Vector3(y, -x + data.elev[y, yMax1] * elevationScale, yMax1);
                     colors[i] = data.colors[y, yMax1, x];
                 }
             }

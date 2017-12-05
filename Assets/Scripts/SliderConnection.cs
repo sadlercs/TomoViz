@@ -13,5 +13,7 @@ public class SliderConnection : MonoBehaviour {
         min.other = max;
         max.other = min;
     }
-	
+
+
 }
+
