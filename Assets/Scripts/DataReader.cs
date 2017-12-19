@@ -119,12 +119,13 @@ public class DataReader : MonoBehaviour {
         if (lonLatView)
         {
             newPos = (snap_toggle.isOn) ? new Vector3(-(latRange.x + (latRange.y - latRange.x) * .5f) * scale, zMax * .5f, -(lonRange.x + (lonRange.y - lonRange.x) * .5f) * scale) :
-                        new Vector3(-(latRange.x + (latRange.y - latRange.x) * (yB.y - yB.x)/yMax * .5f) * scale, zMax * .5f, -(lonRange.x + (lonRange.y - lonRange.x) * (xB.y - xB.x) / xMax * .5f) * scale);
+                                          new Vector3(-(latRange.x + (latRange.y - latRange.x) * (yB.y + yB.x) / yMax * .5f) * scale, (zB.y - zB.x) * .5f + zB.x, -(lonRange.x + (lonRange.y - lonRange.x) * (xB.y + xB.x) / xMax * .5f) * scale);
+
         }
         else
         {
             newPos = (snap_toggle.isOn) ? new Vector3(-xMax * .5f, zMax * .5f, -yMax * .5f) :
-            new Vector3(-(xB.y - xB.x) * .5f, (zB.y - zB.x) * .5f, -(yB.y - yB.x) * .5f);
+            new Vector3(-(xB.y - xB.x) * .5f, (zB.y - zB.x) * .5f  + zB.x, -(yB.y - yB.x) * .5f);
         }
        
                  
@@ -344,26 +345,26 @@ public class DataReader : MonoBehaviour {
 
                 inp_stm.Close();
 
-                xB = new Vector2Int(0, xMax);
-                yB = new Vector2Int(0, yMax);
-                zB = new Vector2Int(0, zMax);
+                xB = new Vector2Int(0, xMax-1);
+                yB = new Vector2Int(0, yMax-1);
+                zB = new Vector2Int(0, zMax-1);
 
                 yield return Reshade();
 
 
             //Assign the slider information
 
-            longitude_slider.GetComponent<SliderConnection>().min.maxValue = xMax;
-            longitude_slider.GetComponent<SliderConnection>().max.maxValue = xMax;
-            longitude_slider.GetComponent<SliderConnection>().max.value = xMax;
+            longitude_slider.GetComponent<SliderConnection>().min.maxValue = xMax-1;
+            longitude_slider.GetComponent<SliderConnection>().max.maxValue = xMax-1;
+            longitude_slider.GetComponent<SliderConnection>().max.value = xMax-1;
 
-            latitude_slider.GetComponent<SliderConnection>().min.maxValue = yMax;
-            latitude_slider.GetComponent<SliderConnection>().max.maxValue = yMax;
-            latitude_slider.GetComponent<SliderConnection>().max.value = yMax;
+            latitude_slider.GetComponent<SliderConnection>().min.maxValue = yMax-1;
+            latitude_slider.GetComponent<SliderConnection>().max.maxValue = yMax-1;
+            latitude_slider.GetComponent<SliderConnection>().max.value = yMax-1;
 
-            elevation_slider.GetComponent<SliderConnection>().min.maxValue = zMax;
-            elevation_slider.GetComponent<SliderConnection>().max.maxValue = zMax;
-            elevation_slider.GetComponent<SliderConnection>().max.value = zMax;
+            elevation_slider.GetComponent<SliderConnection>().min.maxValue = zMax-1;
+            elevation_slider.GetComponent<SliderConnection>().max.maxValue = zMax-1;
+            elevation_slider.GetComponent<SliderConnection>().max.value = zMax-1;
 
 
                 // Create bounding box
@@ -444,16 +445,6 @@ public class DataReader : MonoBehaviour {
     private Mesh GetFaceMesh(int face)
     {
 
-        //Debug.Log("hSize: " + hSize);
-        //Debug.Log("wSize: " + wSize);
-
-        
-
-        int xMax1 = xB.y - 1;
-        int yMax1 = yB.y - 1;
-        int zMax1 = zB.y - 1;
-
-
         //float a, b, c, d, e, f = 0f;
         int hSize = 0;
         int wSize = 0;
@@ -467,70 +458,62 @@ public class DataReader : MonoBehaviour {
             case 5: hSize = (xB.y - xB.x); wSize = (zB.y - zB.x); break;  // Back
         }
 
-        hSize = Math.Abs(hSize) - 1;
-        wSize = Math.Abs(wSize) - 1;
         int size = (wSize + 1) * (hSize + 1);
         Vector3[] vertices = new Vector3[size];
         Color[] colors = new Color[size];
 
-        
         if (face == 0)
         {
-            for (int i = 0, y = yB.x; y <= hSize; y++)
+            for (int i = 0, y = yB.x; y <= yB.y; y++)
             {
-                for (int x = xB.x; x <= wSize; x++, i++)
+                for (int x = xB.x; x <= xB.y; x++, i++)
                 {
-                    vertices[i] = new Vector3(data.latlong[x, y].x * scale, zB.x + data.elev[x, y] * elevationScale, data.latlong[x, y].y * scale);
-                    //vertices[i] = new Vector3(x, zB.x + data.elev[x, y] * elevationScale, y);
-                    colors[i] = data.colors[x, y, zB.x];
+                    vertices[i] = new Vector3(data.latlong[x, y].x * scale, -zB.x + data.elev[x, y] * elevationScale, (data.latlong[x, y].y) * scale);
+                    colors[i] = data.colors[x , y, zB.x];
                 }
             }
         }
         else if (face == 1)
         {
-            for (int i = 0, y = yB.x; y <= hSize; y++)
+            for (int i = 0, y = yB.x; y <= yB.y; y++)
             {
-                for (int x = xB.x; x <= wSize; x++, i++)
+                for (int x = xB.x; x <= xB.y; x++, i++)
                 {
-                    vertices[i] = new Vector3(data.latlong[x, y].x * scale, -zMax1 + data.elev[x, y] * elevationScale, data.latlong[x, y].y * scale);
-                    //vertices[i] = new Vector3(x, -zMax1 + data.elev[x, y] * elevationScale, y);
-                    colors[i] = data.colors[x, y, zMax1];
+                    vertices[i] = new Vector3(data.latlong[x, y].x * scale, -zB.y + data.elev[x, y] * elevationScale, data.latlong[x, y].y * scale);
+                    colors[i] = data.colors[x, y, zB.y];
                 }
             }
         }
         else if (face == 2)
         {
-            for (int i = 0, y = yB.x; y <= hSize; y++)
+            for (int i = 0, y = yB.x; y <= yB.y; y++)
             {
-                for (int x = zB.x; x <= wSize; x++, i++)
+                for (int x = zB.x; x <= zB.y; x++, i++)
                 {
                     vertices[i] = new Vector3(data.latlong[xB.x, y].x * scale, -x + data.elev[xB.x, y] * elevationScale, data.latlong[xB.x, y].y * scale);
-                    //vertices[i] = new Vector3(xB.x, -x + data.elev[xB.x, y] * elevationScale, y);
                     colors[i] = data.colors[xB.x, y, x];
                 }
             }
         }
         else if (face == 3)
         {
-            for (int i = 0, y = yB.x; y <= hSize; y++)
+            for (int i = 0, y = yB.x; y <= yB.y; y++)
             {
-                for (int x = zB.x; x <= wSize; x++, i++)
+                for (int x = zB.x; x <= zB.y; x++, i++)
                 {
-                    vertices[i] = new Vector3(data.latlong[xMax1, y].x * scale, -x + data.elev[xMax1, y] * elevationScale, data.latlong[xMax1, y].y * scale);
-                    //vertices[i] = new Vector3(xMax1, -x + data.elev[xMax1, y] * elevationScale, y);
-                    colors[i] = data.colors[xMax1, y, x];
+                    vertices[i] = new Vector3((data.latlong[xB.y, y].x) * scale, (-x + data.elev[xB.y, y]) * elevationScale, (data.latlong[xB.y, y].y) * scale);
+                    colors[i] = data.colors[xB.y, y, x];
                 }
             }
             
         }
         else if (face == 4)
         {
-            for (int i = 0, y = xB.x; y <= hSize; y++)
+            for (int i = 0, y = xB.x; y <= xB.y; y++)
             {
-                for (int x = zB.x; x <= wSize; x++, i++)
+                for (int x = zB.x; x <= zB.y; x++, i++)
                 {
                     vertices[i] = new Vector3(data.latlong[y, yB.x].x * scale, -x + data.elev[y, yB.x] * elevationScale, data.latlong[y, yB.x].y * scale);
-                    //vertices[i] = new Vector3(y, -x + data.elev[y, yB.x] * elevationScale, yB.x);
                     colors[i] = data.colors[y, yB.x, x];
                 }
             }
@@ -538,13 +521,12 @@ public class DataReader : MonoBehaviour {
         }
         else if (face == 5)
         {
-            for (int i = 0, y = xB.x; y <= hSize; y++)
+            for (int i = 0, y = xB.x; y <= xB.y; y++)
             {
-                for (int x = zB.x; x <= wSize; x++, i++)
+                for (int x = zB.x; x <= zB.y; x++, i++)
                 {
-                    vertices[i] = new Vector3(data.latlong[y, yMax1].x * scale, -x + data.elev[y, yMax1] * elevationScale, data.latlong[y, yMax1].y * scale);
-                    //vertices[i] = new Vector3(y, -x + data.elev[y, yMax1] * elevationScale, yMax1);
-                    colors[i] = data.colors[y, yMax1, x];
+                    vertices[i] = new Vector3(data.latlong[y, yB.y].x * scale, -x + data.elev[y, yB.y] * elevationScale, data.latlong[y, yB.y].y * scale);
+                    colors[i] = data.colors[y, yB.y, x];
                 }
             }
         }
@@ -554,6 +536,7 @@ public class DataReader : MonoBehaviour {
         mesh.vertices = vertices;
         mesh.colors = colors;
 
+        
         int[] triangles = new int[size * 6];
         for (int ti = 0, vi = 0, y = 0; y < hSize; y++, vi++)
         {
