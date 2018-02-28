@@ -16,6 +16,7 @@ public class DataReader : MonoBehaviour
         public Vector3 currentPos;
         public float value;
         public Color color;
+        public Color voxColor;
     }
 
     public Point[,,] points;
@@ -35,16 +36,16 @@ public class DataReader : MonoBehaviour
     public Slider elevationScale_slider;
     public Toggle snap_toggle;
     public Toggle contour_toggle;
+    public Toggle showVolume_toggle;
+    public Toggle showShell_toggle;
     public GameObject VoxelMeshScrollView;
     public GameObject VoxelContentPanel;
     public GameObject VoxelViewPrefab;
     private List<GameObject> VoxelViewSet;
 
-
     private List<GameObject> voxelSet;
-    private List<Color> colorList;
+    public List<GameObject> colorList;
     public GameObject cam;
-
 
     public Material voxelMat;
     private int lonSet = 0;
@@ -56,10 +57,16 @@ public class DataReader : MonoBehaviour
     float scale = 10f;
     private Vector2 lonRange;
     private Vector2 latRange;
+    private Vector2 topoLonRange;
+    private Vector2 topoLatRange;
+    private Vector2 topoEleRange;
 
+    private RectTransform voxelLoading;
     private float elevationScale = 1f;
     Vector2Int lonSetBounds, latSetBounds, elevSetBounds;
 
+    private bool lonLatView = true;
+    public GameObject colorProfilePrefab;
     private bool intGradient;
     private bool bBox;
     public bool contourEnabled;
@@ -69,16 +76,49 @@ public class DataReader : MonoBehaviour
     private Mesh mesh;
     public GameObject[] meshObj;
     public Material meshMat;
+    public GameObject topography;
+    public Transform ColorMaterialContents;
+    private Vector3[,] topographyLatLong;
+    private Vector2 topoDimens;
 
-
+    public GameObject colorPanel;
+    public GameObject cPicker;
+    public bool colorChangeLock = false;
+    public static DataReader instance = null;
     // Use this for initialization
     void Start()
     {
+        //Set up global
+        //Set singleton pattern for Manager
+        if (instance == null)
+            instance = this;
+        else if (instance != this)
+            Destroy(gameObject);
 
-        // End mesh creation info
+
+        voxelLoading = voxelize_button.transform.GetChild(0).GetComponent<RectTransform>();
+
+        // Create a default color profile
         gradient = colorMap.GetPixels();
 
-        StartCoroutine(ParseData("cascadia.dat"));
+     
+        float range = 256f / (max - min);
+        float maxmin1 = max - 1f;
+
+        colorList = new List<GameObject>();
+        float[] clampValues = new float[] { -3f, -2, -1, 0, 1, 2 };
+        for (int i = 0; i < clampValues.Length-1; ++i)
+        {
+            GameObject cp = Instantiate(colorProfilePrefab, ColorMaterialContents);
+            Color col  =  gradient[(int)((Contour(ref min, ref maxmin1, ref clampValues[i]) + (float)max) * range)];
+            cp.GetComponent<ChangeMyColor>().Create(clampValues[i], clampValues[i+1], col);
+            colorList.Add(cp);
+            
+        }
+
+
+
+        StartCoroutine(ParseData("x.dat"));
         //StartCoroutine(ParseData("Endeavor.dat"));
 
     }
@@ -128,19 +168,21 @@ public class DataReader : MonoBehaviour
 
     public void SnapToBB()
     {
-        bool lonLatView = false;// true;
+        
 
         Vector3 newPos;
+        
         if (lonLatView)
         {
-            newPos = (snap_toggle.isOn) ? new Vector3(-(latRange.x + (latRange.y - latRange.x) * .5f) * scale, elevSet * .5f, -(lonRange.x + (lonRange.y - lonRange.x) * .5f) * scale) :
-                                          new Vector3(-(latRange.x + (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(lonRange.x + (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale);
+            newPos = (snap_toggle.isOn) ? new Vector3((-latRange.x - (latRange.y - latRange.x) * 0.5f) * scale  , elevSet * .5f, (-lonRange.x - (lonRange.y - lonRange.x) * 0.5f) * scale) :
+                                          new Vector3(-(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale);
 
         }
         else
         {
             newPos = (snap_toggle.isOn) ? new Vector3(-(latSet-1) * .5f, (elevSet - 1) * .5f, -(lonSet - 1) * .5f) :
                                           new Vector3(-(latSetBounds.x + (latSetBounds.y - latSetBounds.x) * .5f), (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(lonSetBounds.x + (lonSetBounds.y - lonSetBounds.x) * .5f));
+           
         }
 
         this.transform.localPosition = newPos;
@@ -148,9 +190,53 @@ public class DataReader : MonoBehaviour
         {
             meshObj[i].transform.localPosition = newPos;
         }
+
+        //topography.transform.localPosition = new Vector3(newPos.x, newPos.y + 10f, newPos.z);
+
+        /*(snap_toggle.isOn) ? new Vector3((-topoLatRange.x - (topoLatRange.y - topoLatRange.x) * 0.5f) * scale, elevSet * .5f, (-topoLonRange.x - (topoLonRange.y - topoLonRange.x) * 0.5f) * scale) :
+                                          new Vector3(-(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale);
+                                          */
+        //topography.transform.localPosition = new Vector3(-(topoLonRange.x * scale) + newPos.x - Mathf.Abs(topoLonRange.x - latRange.x) * scale, elevSet + (topoEleRange.y - topoEleRange.x) * 0.001f - newPos.y, -(topoLatRange.x * scale) + newPos.z - Mathf.Abs(topoLatRange.x - lonRange.x) * scale);
+
+        /*
+        if (voxelSet != null)
+        {
+            for (int i = 0; i < voxelSet.Count; ++i)
+            {
+                voxelSet[i].transform.localPosition = newPos;
+            }
+        }
+        */
     }
 
-    public IEnumerator Reshade()
+    public void ShowShell()
+    {
+        bool show = showShell_toggle.isOn;
+
+        if (meshObj != null)
+        {
+            for (int i = 0; i < 6; ++i)
+            {
+                meshObj[i].SetActive(show);
+            }
+        }
+    }
+
+    public void ShowVolume()
+    {
+        bool show = showVolume_toggle.isOn;
+
+        if (voxelSet != null)
+        {
+            for (int i = 0; i < voxelSet.Count; ++i)
+            {
+                voxelSet[i].SetActive(show);
+            }
+        }
+    }
+
+
+    public IEnumerator Reshade(bool VOX)
     {
         DelVal Shading;
         if (contourEnabled)
@@ -162,21 +248,78 @@ public class DataReader : MonoBehaviour
             Shading = Gradient;
         }
 
-      
+        if (shading == true) { shading = true; yield break; };
 
-        float range = 256f / (max - min);
-        float maxmin1 = max - 1f;
+
+
+        Debug.Log("Vox Shading: " + VOX);
+        
         int lat = latSet - 1;
         int ele = elevSet - 1;
         int lon = lonSet - 1;
-        for (int i = 1; i < lat; ++i)
+
+
+        // Default gradient - fix later to be a gradient on available colors
+        // By interpolation between available colors spread evenly through the gradient
+        float range = 256f / (max - min);
+        float maxmin1 = max - 1f;
+
+
+        int iS = latSetBounds.x;
+        int iE = latSetBounds.y;
+        int jS = elevSetBounds.x;
+        int jE = elevSetBounds.y;
+        int kS = lonSetBounds.x;
+        int kE = lonSetBounds.y;
+
+        if (VOX == true)
         {
-            for (int j = 1; j < ele; ++j)
+            //Clear voxelColors
+            for (int i = 1; i < lat; ++i)
             {
-                for (int k = 1; k < lon; ++k)
+                for (int j = 1; j < ele; ++j)
                 {
-                    Color c = gradient[(int)((Shading(ref min, ref maxmin1, ref points[i, j, k].value) + (float)max) * range)];
-                    points[i, j, k].color = c;
+                    for (int k = 1; k < lon; ++k)
+                    {
+                        points[i, j, k].voxColor = Color.black;
+                    }
+                }
+            }
+
+            Debug.Log("Vox Shading");
+            //Correct shading to clamped areas
+
+            for (int i = iS; i < iE; ++i)
+            {
+                for (int j = jS; j < jE; ++j)
+                {
+                    for (int k = kS; k < kE; ++k)
+                    {
+                        float v = points[i, j, k].value;
+
+                        for(int t=0; t< colorList.Count; ++t)
+                        {
+                            if(colorList[t].GetComponent<ChangeMyColor>().CanUse(v))
+                            {
+                                points[i, j, k].voxColor = colorList[t].GetComponent<ChangeMyColor>().color;
+                                t = colorList.Count; // safe break
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+        else
+        {
+            for (int i = 1; i < lat; ++i)
+            {
+                for (int j = 1; j < ele; ++j)
+                {
+                    for (int k = 1; k < lon; ++k)
+                    {
+                        points[i, j, k].color = gradient[(int)((Shading(ref min, ref maxmin1, ref points[i, j, k].value) + (float)max) * range)];
+                    }
                 }
             }
         }
@@ -191,56 +334,103 @@ public class DataReader : MonoBehaviour
     {
         contourEnabled = !contourEnabled;
 
-        StartCoroutine(Reshade());
+        StartCoroutine(Reshade(false));
     }
 
     public IEnumerator ParseData(string fileName)
     {
-        Debug.Log("Loading Data");
+        //Debug.Log("Loading Data");
 
         lonRange = new Vector2(float.MaxValue, float.MinValue);
         latRange = new Vector2(float.MaxValue, float.MinValue);
-        /*
-        WWW file_get = new WWW(Application.dataPath + "/Resources/" + fileName); // Resources Folder Version
-
-        while (!file_get.isDone)
-        {
-            yield return null;
-        }
-        */
-
+        topoEleRange = new Vector2(float.MaxValue, float.MinValue);
+        int y;
+        int x;
+        int total = 1;
+        
         StreamReader inp_stm = new StreamReader(Application.dataPath + "/Resources/" + fileName);
 
 
+        string inp_ln;
 
-        // Get Latitude data
+        /*
+        1) longitude min
+        2) longitude max
+        3) latitude min
+        4) latitude max
+        5) increment in longitude
+        6) increment in latitude
+        7) length longitude
+        8) length latitude
+        */
 
-        string inp_ln = inp_stm.ReadLine();
+        // Get topography header data
+        inp_ln = inp_stm.ReadLine();
+        List<string> topographyHeader = new List<string>(inp_ln.Split(' '));
+
+        Debug.Log(inp_ln);
+
+        topoLonRange = new Vector2(Convert.ToSingle(inp_stm.ReadLine()), Convert.ToSingle(inp_stm.ReadLine()));
+        topoLatRange = new Vector2(Convert.ToSingle(inp_stm.ReadLine()), Convert.ToSingle(inp_stm.ReadLine()));
+        float m_inc = Convert.ToSingle(inp_stm.ReadLine());
+        float n_inc = Convert.ToSingle(inp_stm.ReadLine());
+        float lonInc = (lonLatView)? m_inc: 1.0f;
+        float latInc = (lonLatView) ? n_inc : 1.0f;
+        x = Convert.ToInt32(inp_stm.ReadLine());
+        y = Convert.ToInt32(inp_stm.ReadLine());
+        topographyLatLong = new Vector3[y, x];
+        topoDimens = new Vector2(y, x);
+
+        inp_ln = inp_stm.ReadLine();
+
+        List<string> elevationData = new List<string>(inp_ln.Split(' '));
+        if (!(Convert.ToInt32(elevationData[0]) == x) || !(Convert.ToInt32(elevationData[1]) == y)) Debug.Log("error in topoSize");
+
+
+        Debug.Log("lonInc: " + lonInc + "   latInc: " + latInc);
+        for (int j = 0; j < y; ++j)
+        {
+            float ji = (float)j * lonInc;
+            for (int i = 0; i < x; ++i)
+            {
+                float ii = (float)i * lonInc;
+                float val = Convert.ToSingle(inp_stm.ReadLine());
+                topographyLatLong[j, i] = new Vector3(ii,val,ji);
+                if (val < topoEleRange.x) topoEleRange.x = val; else if (val > topoEleRange.y) topoEleRange.y = val;
+            }
+        }
+        
+
+        // Get velocity Latitude data
+
+        inp_ln = inp_stm.ReadLine();
         List<string> dimens = new List<string>(inp_ln.Split(' '));
-
+        //Debug.Log("Velocity Latitude dimensions: " + inp_ln);
 
         Vector2[,] latlong;
         if (dimens.Count != 2)
         {
             Debug.LogError("Latitude dimensions are not correct: " + dimens.Count);
+            for (int i = 0; i < dimens.Count; ++i)
+            {
+                Debug.Log("index " + i + ": " + dimens[i]);
+            }
             yield break;
         }
 
-        int y = Convert.ToInt32(dimens[0]);
-        int x = Convert.ToInt32(dimens[1]);
+        y = Convert.ToInt32(dimens[0]);
+        x = Convert.ToInt32(dimens[1]);
         latlong = new Vector2[x, y];
 
         Debug.Log(x + "..." + y);
 
         // MatLab is column major order -> z,y,x
-        int counter = 0;
 
         for (int j = 0; j < x; ++j)
         {
             for (int i = 0; i < y; ++i)
             {
                 float val = Convert.ToSingle(inp_stm.ReadLine());
-                //if (counter++ < 10) Debug.Log(val);
                 latlong[j, i].y = val;
                 if (val < lonRange.x) lonRange.x = val; else if (val > lonRange.y) lonRange.y = val;
             }
@@ -252,9 +442,14 @@ public class DataReader : MonoBehaviour
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
 
+        //Debug.Log("Velocity Longitude dimensions: " + inp_ln);
         if (dimens.Count != 2)
         {
             Debug.LogError("Longitude dimensions are not correct: " + dimens.Count);
+            for (int i = 0; i < dimens.Count; ++i)
+            {
+                Debug.Log("index " + i + ": " + dimens[i]);
+            }
             yield break;
         }
 
@@ -273,49 +468,10 @@ public class DataReader : MonoBehaviour
             }
         }
 
-        Debug.Log("latRange: " + latRange);
-        Debug.Log("lonRange: " + lonRange);
-        // Get Elevation Data
-
-
-        inp_ln = inp_stm.ReadLine();
-        dimens = new List<string>(inp_ln.Split(' '));
-
-        if (dimens.Count != 2)
-        {
-            Debug.LogError("Elevation dimensions are not correct: " + dimens.Count);
-            yield break;
-        }
-
-        int[] eledim = new int[dimens.Count];
-
-        int total = 1;
-
-        for (int i = 0; i < dimens.Count; ++i)
-        {
-            eledim[i] = Convert.ToInt32(dimens[i]);
-            total *= eledim[i];
-        }
-
-        //Populate data matrix O(n^3)
-
-        lonSet = eledim[0];
-        latSet = eledim[1];
+        //Debug.Log("Starting latRange: " + latRange.ToString());
+        //Debug.Log("Starting lonRange: " + lonRange.ToString());
         
-        float[,] elev = new float[latSet, lonSet];
-
-
-        // MatLab is column major order -> z,y,x
-        
-        for (int j = 0; j < latSet; ++j)
-        {
-            for (int i = 0; i < lonSet; ++i)
-            {
-                elev[j, i] = Convert.ToSingle(inp_stm.ReadLine());
-                //if (counter++ < 10) Debug.Log(elev[j, i]);
-            }
-        }
-
+        // Get Velocity data
 
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
@@ -324,6 +480,10 @@ public class DataReader : MonoBehaviour
         if (dimens.Count != 3)
         {
             Debug.LogError("Dimensions are not correct: " + dimens.Count);
+            for (int i = 0; i < dimens.Count; ++i)
+            {
+                Debug.Log("index " + i + ": " + dimens[i]);
+            }
             yield break;
         }
         int[] dim = new int[dimens.Count];
@@ -345,7 +505,7 @@ public class DataReader : MonoBehaviour
         elevSet = dim[2] + 2;
 
         points = new Point[latSet, elevSet, lonSet];
-        Debug.Log("lonSet: " + lonSet + "  latSet: " + latSet + "  elevSet: " + elevSet + " dim[0]: " + dim[0] + " dim[1]: " + dim[1] + " dim[2]: " + dim[2]);
+        //Debug.Log("lonSet: " + lonSet + "  latSet: " + latSet + "  elevSet: " + elevSet + " dim[0]: " + dim[0] + " dim[1]: " + dim[1] + " dim[2]: " + dim[2]);
 
         // MatLab is column major order -> z,y,x
 
@@ -359,7 +519,7 @@ public class DataReader : MonoBehaviour
 
         for (int i = 0; i < elevSet; ++i)
         {
-            
+            float e = -i * 0.5f;
             for (int j = 0; j < latSet; ++j)
             {
                 int jm1 = j - 1;
@@ -369,8 +529,8 @@ public class DataReader : MonoBehaviour
                     Point tp = new Point();
                     if (i > 0 && i < ele && j > 0 && j < lat && k > 0 && k < lon) // make space for the shell
                     {
-                        tp.position = new Vector3(latlong[jm1, km1].x, elev[jm1, km1], latlong[jm1, km1].y);
-                       // if (counter < 1000) { counter++; Debug.Log(counter +  ": " + tp.position.ToString("F6")); }
+                        //tp.position = new Vector3(latlong[jm1, km1].x, elev[jm1, km1], latlong[jm1, km1].y);
+                        tp.position = new Vector3(latlong[jm1, km1].x, e, latlong[jm1, km1].y);
                         tp.value = Convert.ToSingle(inp_stm.ReadLine());
                         points[j, i, k] = tp;
                     }
@@ -479,7 +639,7 @@ public class DataReader : MonoBehaviour
         }
         
 
-        yield return Reshade();
+        yield return Reshade(false);
 
         //Assign the slider information
 
@@ -545,11 +705,106 @@ public class DataReader : MonoBehaviour
         // End Create bounding box
 
 
-
-        Debug.Log("Data Loaded");
+        //StartCoroutine(RebuildTopography());
+        //Debug.Log("Data Loaded");
 
         cam.GetComponent<DragMouseOrbit>().SetDistance(GetLongestSide() * 2);
+        StartCoroutine(RebuildTopography());
 
+    }
+    
+    public void AddColors()
+    {
+        // Add button to list
+        GameObject cp = Instantiate(colorProfilePrefab, ColorMaterialContents);
+        colorList.Add(cp);
+    }
+
+    public void RemoveColors()
+    {
+        if(colorList.Count > 0)
+        {
+            GameObject cp = colorList[colorList.Count - 1];
+            Destroy(cp);
+        }
+    }
+
+    // This builds the topography layer
+    IEnumerator RebuildTopography()
+    {
+
+        int wMin = 0;
+        int wMax = (int)topoDimens.y-1;
+        int dMin = 0;
+        int dMax = (int)topoDimens.x-1;
+        
+        Debug.Log("topoLatRange: " + topoLatRange.ToString());
+        //Debug.Log("DIF topoLatRange: " + (topoLatRange.y - topoLatRange.x));
+        Debug.Log("topoLonRange: " + topoLonRange.ToString());
+        //Debug.Log("DIF topoLonRange: " + (topoLonRange.y - topoLonRange.x));
+        Debug.Log("latRange: " + latRange.ToString());
+        //Debug.Log("DIF latRange: " + (latRange.y - latRange.x));
+        Debug.Log("lonRange: " + lonRange.ToString());
+        //Debug.Log("DIF lonRange: " + (lonRange.y - lonRange.x));
+
+        float wRatio = (latRange.y - latRange.x) / (topoLatRange.y - topoLatRange.x);
+        float dRatio = (lonRange.y - lonRange.x) / (topoLonRange.y - topoLonRange.x);
+
+
+        Debug.Log("wRatio: " + wRatio + "dRatio: " + dRatio);
+
+
+        int wSize = wMax - wMin;
+        int dSize = dMax - dMin;
+        int x = wSize; int y = dSize;
+
+        int size = (x + 1) * (y + 1);
+
+        int b = elevSetBounds.x;
+
+        Vector3[] vertices = new Vector3[size];
+        Color[] colors = new Color[size];
+
+        int i, w;
+        float elevationScale = 0.001f;
+        for (i = 0, w = wMin; w <= wMax; w++)
+        {
+            for (int d = dMin; d <= dMax; d++, i++)
+            {
+                Vector3 p = topographyLatLong[d,w];
+                colors[i] = Color.white;
+                //vertices[i] = new Vector3(w, -b + p.y, d);
+                vertices[i] = new Vector3(p.x * scale, p.y * elevationScale, p.z * scale);
+            }
+        }
+        
+        //Debug.Log("size: " + size + " i:" + i);
+        Mesh tMesh = new Mesh
+        {
+            indexFormat = UnityEngine.Rendering.IndexFormat.UInt32,
+            vertices = vertices,
+            colors = colors
+        };
+
+
+        int[] triangles = new int[size * 6];
+        int ti, vi;
+        for (ti = 0, vi = 0, i = 0; i < x; i++, vi++)
+        {
+            for (int j = 0; j < y; j++, ti += 6, vi++)
+            {
+                triangles[ti] = vi;
+                triangles[ti + 3] = triangles[ti + 2] = vi + 1;
+                triangles[ti + 4] = triangles[ti + 1] = vi + y + 1;
+                triangles[ti + 5] = vi + y + 2;
+            }
+        }
+        tMesh.triangles = triangles;
+        tMesh.RecalculateNormals();
+        tMesh.RecalculateTangents();
+        topography.GetComponent<MeshFilter>().mesh = tMesh;
+
+        yield return null;
 
     }
 
@@ -562,7 +817,6 @@ public class DataReader : MonoBehaviour
         {
             meshObj[i].GetComponent<MeshFilter>().mesh = GetFaceMesh(i);
         }
-
 
         yield return null;
 
@@ -593,7 +847,6 @@ public class DataReader : MonoBehaviour
         int size = (x+1) * (y+1);
         Vector3[] vertices = new Vector3[size];
         Color[] colors = new Color[size];
-        int counter = 0;
 
         //Debug.Log("latSetBounds: " + latSetBounds.ToString());
         //Debug.Log("lonSetBounds: " + lonSetBounds.ToString());
@@ -607,12 +860,11 @@ public class DataReader : MonoBehaviour
                     Vector3 p = points[w, b, d].position;
                     //if (counter < 1000 &&  d == lonSetBounds.y) { counter++; Debug.Log(i + ":  " + p.ToString("F6")); }
                     colors[i] = points[w, b, d].color;
-                    //vertices[i] = new Vector3(p.x * scale, -b + p.y * elevationScale, p.z * scale);
-                    vertices[i] = new Vector3(w, -b + p.y * elevationScale, d);
+                    vertices[i] = (lonLatView)? new Vector3(p.x * scale, -b + p.y, p.z * scale): 
+                        new Vector3(w * scale, -b + p.y * elevationScale, d * scale);
                 }
             }
         }
-        
         else if (face == 1) // Bottom
         {
             int b = elevSetBounds.y;
@@ -622,12 +874,11 @@ public class DataReader : MonoBehaviour
                 {
                     Vector3 p = points[w, b, d].position;
                     colors[i] = points[w, b, d].color;
-                    //vertices[i] = new Vector3(p.x * scale, -b + p.y * elevationScale, p.z * scale);
-                    vertices[i] = new Vector3(w, -b + p.y * elevationScale, d);
+                    vertices[i] = new Vector3(p.x * scale, -b + p.y, p.z * scale);
+                    //vertices[i] = new Vector3(p.x, -b + p.y, p.z);
                 }
             }
         }
-        
         else if (face == 2) // Left
         {
             int b = lonSetBounds.x;
@@ -637,13 +888,12 @@ public class DataReader : MonoBehaviour
                 {
                     Vector3 p = points[w, h, b].position;
                     colors[i] = points[w, h, b].color;
-                    // vertices[i] = new Vector3(p.x * scale, -h + p.y * elevationScale, p.z * scale);
-                    vertices[i] = new Vector3(w, -h + p.y * elevationScale, b);
+                    vertices[i] = new Vector3(p.x * scale, -h + p.y, p.z * scale);
+                    //vertices[i] = new Vector3(w, -h + p.y, b);
 
                 }
             }
-        }
-        
+        }  
         else if (face == 3) // Right
         {
             int b = lonSetBounds.y;
@@ -653,12 +903,11 @@ public class DataReader : MonoBehaviour
                 {
                     Vector3 p = points[w, h, b].position;
                     colors[i] = points[w, h, b].color;
-                    //vertices[i] = new Vector3(p.x * scale, -h + p.y * elevationScale, p.z * scale);
-                    vertices[i] = new Vector3(w, -h + p.y * elevationScale, b);
+                    vertices[i] = new Vector3(p.x * scale, -h + p.y , p.z * scale);
+                    //vertices[i] = new Vector3(w, -h + p.y, b);
                 }
             }
-        }
-        
+        } 
         else if (face == 4) // Front
         {
             int b = latSetBounds.x;
@@ -668,8 +917,8 @@ public class DataReader : MonoBehaviour
                 {
                     Vector3 p = points[b, h, d].position;
                     colors[i] = points[b, h, d].color;
-                    //vertices[i] = new Vector3(p.x * scale, -h + p.y * elevationScale, p.z * scale);
-                    vertices[i] = new Vector3(b, -h + p.y * elevationScale, d);
+                    vertices[i] = new Vector3(p.x * scale, -h + p.y, p.z * scale);
+                    //vertices[i] = new Vector3(b, -h + p.y, d);
                 }
             }
         }
@@ -682,12 +931,11 @@ public class DataReader : MonoBehaviour
                 {
                     Vector3 p = points[b, h, d].position;
                     colors[i] = points[b, h, d].color;
-                    //vertices[i] = new Vector3(p.x * scale, -h + p.y * elevationScale, p.z * scale);
-                    vertices[i] = new Vector3(b, -h + p.y * elevationScale, d);
+                    vertices[i] = new Vector3(p.x * scale, -h + p.y, p.z * scale);
+                    //vertices[i] = new Vector3(b, -h + p.y, d);
                 }
             }
         }
-        
 
         mesh = new Mesh
         {
@@ -695,7 +943,6 @@ public class DataReader : MonoBehaviour
             vertices = vertices,
             colors = colors
         };
-
 
         int[] triangles = new int[size * 6];
         for (int ti = 0, vi = 0, i = 0; i < x; i++, vi++)
@@ -744,7 +991,7 @@ public class DataReader : MonoBehaviour
         while (shading == true) yield return null;
         //Arbitrarily start with face 0 , top down build
 
-        Debug.Log("SetVoxelState elevSet: " + elevSet + " lonSet: " + lonSet + " latSet: " + latSet);
+        //Debug.Log("SetVoxelState elevSet: " + elevSet + " lonSet: " + lonSet + " latSet: " + latSet);
         
         for (int x = 0; x < latSet; x++)
         {
@@ -754,7 +1001,7 @@ public class DataReader : MonoBehaviour
                 {
                     Vector3 t = points[x, y, z].position;
                     //points[x, y, z].currentPos = new Vector3(t.x*scale, (float)(-y + t.y) , t.z * scale);
-                    points[x, y, z].currentPos = new Vector3(x, (float)(-y + t.y), z);
+                    points[x, y, z].currentPos = new Vector3(t.x * scale, (float)(-y + t.y), t.z * scale);
                 }
             }
         }
@@ -776,9 +1023,6 @@ public class DataReader : MonoBehaviour
 
     public IEnumerator VoxPrep()
     {
-        //int numSets = colorList.Count;
-        float range = 256f / (max - min);
-        float maxmin1 = max - 1f;
 
         if (voxelSet == null)
         {
@@ -792,46 +1036,6 @@ public class DataReader : MonoBehaviour
             }
             voxelSet.Clear();
         }
-
-
-        Toggle toggle = contour_toggle.GetComponent<Toggle>();
-        if (!toggle.isOn)
-        {
-            shading = true;
-            toggle.isOn = true;
-            while (shading == true) yield return null;
-        }
-
-
-        // Set the current state to be voxelized
-        yield return SetVoxelState();
-
-        colorList = new List<Color>();
-        float[] clampValues = new float [] { -3f, -2, -1, 0, 1, 2 };
-        for (int i = 0; i < clampValues.Length; ++i)
-        {
-
-            Color c = gradient[(int)((Contour(ref min, ref maxmin1, ref clampValues[i]) + (float)max) * range)];
-            colorList.Add(c);
-        }
-
-        
-        for (int i = 0; i < colorList.Count; ++i)
-        {
-            StartCoroutine(Voxelize(colorList[i]));
-        }
-
-        while (voxelSet.Count < colorList.Count)
-        {
-            yield return new WaitForSeconds(2f);
-        }
-
-        RectTransform voxelLoading = voxelize_button.transform.GetChild(0).GetComponent<RectTransform>();
-        voxelLoading.sizeDelta = Vector2.zero;
-
-        // Build VoxelMenu Set
-        VoxelMeshScrollView.SetActive(true);
-
 
         // Destroy objects in list to refresh the view with new updated list
 
@@ -849,19 +1053,44 @@ public class DataReader : MonoBehaviour
             VoxelViewSet.Clear();
         }
 
+        VoxelMeshScrollView.SetActive(false);
+
+        yield return Reshade(true);
+        //while (shading == true) yield return null;
+
+        // Set the current state to be voxelized
+        yield return SetVoxelState();
+
+        for (int i = 0; i < colorList.Count; ++i)
+        {
+            StartCoroutine(Voxelize(colorList[i].GetComponent<ChangeMyColor>().color));
+        }
+
+        while (voxelSet.Count < colorList.Count)
+        {
+            yield return new WaitForSeconds(2f);
+        }
+
+        voxelLoading.sizeDelta = Vector2.zero;
+
+
+        // Build VoxelMenu Set
+        VoxelMeshScrollView.SetActive(true);
+
+
         // Make a new list
         VoxelContentPanel.GetComponent<RectTransform>().sizeDelta = new Vector2( VoxelContentPanel.GetComponent<RectTransform>().sizeDelta.x, voxelSet.Count * (VoxelViewPrefab.GetComponent<RectTransform>().sizeDelta.y + 2f));
         for (int i=0; i< voxelSet.Count; ++i)
         {
             GameObject go = Instantiate(VoxelViewPrefab, VoxelContentPanel.transform);
-            go.GetComponent<VoxelToggle>().SetData(voxelSet[i], colorList[i], colorList[i].ToString());
+            go.GetComponent<VoxelToggle>().SetData(voxelSet[i], colorList[i].GetComponent<ChangeMyColor>().color, colorList[i].GetComponent<ChangeMyColor>().low.ToString() + "  -  " + colorList[i].GetComponent<ChangeMyColor>().high.ToString());
             VoxelViewSet.Add(go);
         }
     }
 
     public IEnumerator Voxelize(Color colorval)
     {
-        Debug.Log("Color voxelizing: " + colorval);
+        //Debug.Log("Color voxelizing: " + colorval);
         List<Vector3> vertices = new List<Vector3>();
         // Polygonise the grid 
 
@@ -870,6 +1099,13 @@ public class DataReader : MonoBehaviour
         int wm1 = latSet - 1;
         int hm1 = elevSet - 1;
         int dm1 = lonSet - 1;
+
+        int iS = latSetBounds.x - 1;
+        int iE = latSetBounds.y + 1;
+        int jS = elevSetBounds.x - 1;
+        int jE = elevSetBounds.y + 1;
+        int kS = lonSetBounds.x - 1;
+        int kE = lonSetBounds.y + 1;
 
         int stopStep = 5;
         int[] waitSet = new int[stopStep];
@@ -880,22 +1116,25 @@ public class DataReader : MonoBehaviour
 
         float loadingWidth = voxelize_button.GetComponent<RectTransform>().rect.width;
         float loadingHeight = voxelize_button.GetComponent<RectTransform>().rect.height;
-        float div = 1f / ((float)colorList.Count * (float)wm1 * (float)hm1)  * (float)loadingWidth;
-        RectTransform voxelLoading = voxelize_button.transform.GetChild(0).GetComponent<RectTransform>();
-
-
-
+        float div = 1f / ((float)colorList.Count * (float)(iE-iS) * (float)(jE-jS))  * (float)loadingWidth;
         
 
-        for (int i = 0; i < wm1; i++)
+
+
+        // Bind the values in the user moves the sliders while voxelizing
+
+       
+
+
+        for (int i = iS; i < iE; i++)
         {
             int i1 = i + 1;
 
-            for (int j = 0; j < hm1; j++)
+            for (int j = jS; j < jE; j++)
             {
                 int j1 = j + 1;
 
-                for (int k = 0; k < dm1; k++)
+                for (int k = kS; k < kE; k++)
                 {
                     int k1 = k + 1;
                     GRIDCELL grid = new GRIDCELL
@@ -905,28 +1144,28 @@ public class DataReader : MonoBehaviour
                     };
 
                     grid.p[0] = points[i, j, k].currentPos;
-                    grid.val[0] = points[i, j, k].color == colorval ? 0 : 1;
+                    grid.val[0] = points[i, j, k].voxColor == colorval ? 0 : 1;
 
                     grid.p[1] = points[i1, j, k].currentPos;
-                    grid.val[1] = points[i1, j, k].color == colorval ? 0 : 1;
+                    grid.val[1] = points[i1, j, k].voxColor == colorval ? 0 : 1;
 
                     grid.p[2] = points[i1, j1, k].currentPos;
-                    grid.val[2] = points[i1, j1, k].color == colorval ? 0 : 1;
+                    grid.val[2] = points[i1, j1, k].voxColor == colorval ? 0 : 1;
 
                     grid.p[3] = points[i, j1, k].currentPos;
-                    grid.val[3] = points[i, j1, k].color == colorval ? 0 : 1;
+                    grid.val[3] = points[i, j1, k].voxColor == colorval ? 0 : 1;
 
                     grid.p[4] = points[i, j, k1].currentPos;
-                    grid.val[4] = points[i, j, k1].color == colorval ? 0 : 1;
+                    grid.val[4] = points[i, j, k1].voxColor == colorval ? 0 : 1;
 
                     grid.p[5] = points[i1, j, k1].currentPos;
-                    grid.val[5] = points[i1, j, k1].color == colorval ? 0 : 1;
+                    grid.val[5] = points[i1, j, k1].voxColor == colorval ? 0 : 1;
 
                     grid.p[6] = points[i1, j1, k1].currentPos;
-                    grid.val[6] = points[i1, j1, k1].color == colorval ? 0 : 1;
+                    grid.val[6] = points[i1, j1, k1].voxColor == colorval ? 0 : 1;
 
                     grid.p[7] = points[i, j1, k1].currentPos;
-                    grid.val[7] = points[i, j1, k1].color == colorval ? 0 : 1;
+                    grid.val[7] = points[i, j1, k1].voxColor == colorval ? 0 : 1;
                     
                     PolygoniseCube(ref grid, 0.5f, ref vertices);
                     
