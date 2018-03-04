@@ -19,8 +19,8 @@ public class ChangeMyColor : MonoBehaviour {
 
     public void PickColor()
     {
-        DataReader.instance.colorPanel.SetActive(true);
-        DataReader.instance.cPicker.GetComponent<ColorPicker>().SetCurrentGO(this.gameObject);
+        Manager.instance.colorPanel.SetActive(true);
+        Manager.instance.cPicker.GetComponent<ColorPicker>().SetCurrentGO(this.gameObject);
     }
 
     public void Create(float lo, float hi, Color c)
@@ -58,14 +58,14 @@ public class ChangeMyColor : MonoBehaviour {
         }
        
 
-        int listCnt = DataReader.instance.colorList.Count;
+        int listCnt = Manager.instance.colorList.Count;
 
         for (int i=0; i< listCnt; ++i)
         {
-            if (DataReader.instance.colorList[i] != this.gameObject && DataReader.instance.colorList[i].GetComponent<ChangeMyColor>().usable == true)
+            if (Manager.instance.colorList[i] != this.gameObject && Manager.instance.colorList[i].GetComponent<ChangeMyColor>().usable == true)
             {
-                float lowCheck = DataReader.instance.colorList[i].GetComponent<ChangeMyColor>().low;
-                float highCheck = DataReader.instance.colorList[i].GetComponent<ChangeMyColor>().high;
+                float lowCheck = Manager.instance.colorList[i].GetComponent<ChangeMyColor>().low;
+                float highCheck = Manager.instance.colorList[i].GetComponent<ChangeMyColor>().high;
                 if (_low == lowCheck)
                 {
                     lowInput.text = low.ToString(); return;
