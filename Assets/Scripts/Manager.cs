@@ -85,6 +85,10 @@ public class Manager : MonoBehaviour
     public GameObject cPicker;
     public bool colorChangeLock = false;
     public static Manager instance = null;
+
+    private const float scaleLON = (360f / 360.0f);
+    private const float scaleLAT = (360f / 180.0f);
+
     // Use this for initialization
     void Start()
     {
@@ -175,15 +179,22 @@ public class Manager : MonoBehaviour
 
     public void SnapToBB()
     {
-        
 
+        lonLatView = true;
         Vector3 newPos;
-        
+
+       // Debug.Log("scaleLON * lonRange.x: " + scaleLON * lonRange.x * scale + ", scaleLON * lonRange.y: " + scaleLON * lonRange.y * scale);
+
         if (lonLatView)
         {
-            newPos = (snap_toggle.isOn) ? new Vector3((-latRange.x - (latRange.y - latRange.x) * 0.5f) * scale  , elevSet * .5f, (-lonRange.x - (lonRange.y - lonRange.x) * 0.5f) * scale) :
-                                          new Vector3(-(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale);
-
+            
+           newPos = (snap_toggle.isOn) ? new Vector3(lonRange.y * 0.5f * scale  , elevSet * .5f, (-scaleLAT * latRange.x - (scaleLAT * latRange.y - scaleLAT * latRange.x) * 0.5f) * scale) :
+                                         new Vector3(-(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale);
+           
+            /*
+            newPos = (snap_toggle.isOn) ? new Vector3((-scaleLON * lonRange.x + (scaleLON * lonRange.y - scaleLON * lonRange.x) * 0.5f) * scale  , elevSet * .5f, (-scaleLAT * latRange.x - (scaleLAT * latRange.y - scaleLAT * latRange.x) * 0.5f) * scale) :
+                                          new Vector3(-(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale);
+            */
         }
         else
         {
@@ -198,7 +209,9 @@ public class Manager : MonoBehaviour
             meshObj[i].transform.localPosition = newPos;
         }
 
-        //topography.transform.localPosition = new Vector3(newPos.x, newPos.y + 10f, newPos.z);
+        // Debug.Log("topoEleRange: " + topoEleRange.ToString());
+        float elevationOffset = ((topoEleRange.y - topoEleRange.x) * 0.5f) * elevationScale + meshObj[0].transform.localPosition.y;
+        topography.transform.localPosition = new Vector3(newPos.x , elevationOffset + 5f, newPos.z);
 
         /*(snap_toggle.isOn) ? new Vector3((-topoLatRange.x - (topoLatRange.y - topoLatRange.x) * 0.5f) * scale, elevSet * .5f, (-topoLonRange.x - (topoLonRange.y - topoLonRange.x) * 0.5f) * scale) :
                                           new Vector3(-(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale);
@@ -242,7 +255,6 @@ public class Manager : MonoBehaviour
         }
     }
 
-
     public IEnumerator Reshade(bool VOX)
     {
         DelVal Shading;
@@ -272,21 +284,21 @@ public class Manager : MonoBehaviour
         float maxmin1 = max - 1f;
 
 
-        int iS = latSetBounds.x;
-        int iE = latSetBounds.y;
+        int iS = lonSetBounds.x;
+        int iE = lonSetBounds.y;
         int jS = elevSetBounds.x;
         int jE = elevSetBounds.y;
-        int kS = lonSetBounds.x;
-        int kE = lonSetBounds.y;
+        int kS = latSetBounds.x;
+        int kE = latSetBounds.y;
 
         if (VOX == true)
         {
             //Clear voxelColors
-            for (int i = 1; i < lat; ++i)
+            for (int i = 1; i < lon; ++i)
             {
                 for (int j = 1; j < ele; ++j)
                 {
-                    for (int k = 1; k < lon; ++k)
+                    for (int k = 1; k < lat; ++k)
                     {
                         points[i, j, k].voxColor = Color.clear;
                     }
@@ -319,11 +331,11 @@ public class Manager : MonoBehaviour
         }
         else
         {
-            for (int i = 1; i < lat; ++i)
+            for (int i = 1; i < lon; ++i)
             {
                 for (int j = 1; j < ele; ++j)
                 {
-                    for (int k = 1; k < lon; ++k)
+                    for (int k = 1; k < lat; ++k)
                     {
                         points[i, j, k].color = gradient[(int)((Shading(ref min, ref maxmin1, ref points[i, j, k].value) + (float)max) * range)];
                     }
@@ -385,9 +397,10 @@ public class Manager : MonoBehaviour
         float latInc = (lonLatView) ? n_inc : 1.0f;
         x = Convert.ToInt32(inp_stm.ReadLine());
         y = Convert.ToInt32(inp_stm.ReadLine());
-        topographyLatLong = new Vector3[y, x];
-        topoDimens = new Vector2(y, x);
+        topographyLatLong = new Vector3[x, y];
+        topoDimens = new Vector2(x, y);
 
+        Debug.Log("topoDimens: " + topoDimens.ToString());
         inp_ln = inp_stm.ReadLine();
 
         List<string> elevationData = new List<string>(inp_ln.Split(' '));
@@ -395,14 +408,14 @@ public class Manager : MonoBehaviour
 
 
         Debug.Log("lonInc: " + lonInc + "   latInc: " + latInc);
-        for (int j = 0; j < y; ++j)
+        for (int j = y-1; j >= 0; --j)
         {
-            float ji = (float)j * lonInc;
+            float ji = scaleLAT * (90f - (topoLatRange.x + (float) j * latInc));
             for (int i = 0; i < x; ++i)
             {
-                float ii = (float)i * lonInc;
+                float ii = scaleLON * (180f + (topoLonRange.x + (float)i * lonInc));
                 float val = Convert.ToSingle(inp_stm.ReadLine());
-                topographyLatLong[j, i] = new Vector3(ii,val,ji);
+                topographyLatLong[i, j] = new Vector3(ii,val,ji);
                 if (val < topoEleRange.x) topoEleRange.x = val; else if (val > topoEleRange.y) topoEleRange.y = val;
             }
         }
@@ -425,27 +438,32 @@ public class Manager : MonoBehaviour
             yield break;
         }
 
-        y = Convert.ToInt32(dimens[0]);
-        x = Convert.ToInt32(dimens[1]);
+        x = Convert.ToInt32(dimens[0]);
+        y = Convert.ToInt32(dimens[1]);
         latlong = new Vector2[x, y];
 
         Debug.Log(x + "..." + y);
 
+
+        // lat 181y, lon 145x
         // MatLab is column major order -> z,y,x
 
-        for (int j = 0; j < x; ++j)
+        for (int j = 0; j < y; ++j)
         {
-            for (int i = 0; i < y; ++i)
+            for (int i = 0; i < x; ++i)
             {
                 float val = Convert.ToSingle(inp_stm.ReadLine());
-                latlong[j, i].y = val;
-                if (val < lonRange.x) lonRange.x = val; else if (val > lonRange.y) lonRange.y = val;
+
+                // convert LAT coordinates to mappable range N/W
+                //scaleLON * (180f + latlong[km1, jm1].x), e, scaleLAT * (90f - latlong[km1, jm1].y));
+                latlong[i, j].y = scaleLAT * (90f - val);
+                if (val < latRange.x) latRange.x = val; else if (val > latRange.y) latRange.y = val;
             }
         }
 
 
         // Get Longitude data
-
+        
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
 
@@ -461,25 +479,34 @@ public class Manager : MonoBehaviour
         }
 
 
-        y = Convert.ToInt32(dimens[0]);
-        x = Convert.ToInt32(dimens[1]);
-        // MatLab is column major order -> z,y,x
+        x = Convert.ToInt32(dimens[0]);
+        y = Convert.ToInt32(dimens[1]);
 
-        for (int j = 0; j < x; ++j)
+       
+        for (int j = 0; j < y; ++j)
         {
-            for (int i = 0; i < y; ++i)
+            for (int i = 0; i < x; ++i)
             {
                 float val = Convert.ToSingle(inp_stm.ReadLine());
-                latlong[j, i].x = val;
-                if (val < latRange.x) latRange.x = val; else if (val > latRange.y) latRange.y = val;
+
+                // convert LON coordinates to mappable range E/W
+                
+                latlong[i, j].x = scaleLON * (180f + val);
+                if (val < lonRange.x) lonRange.x = val; else if (val > lonRange.y) lonRange.y = val;
+
             }
         }
 
-        //Debug.Log("Starting latRange: " + latRange.ToString());
-        //Debug.Log("Starting lonRange: " + lonRange.ToString());
-        
-        // Get Velocity data
 
+
+        Debug.Log("point 0,0:  " + latlong[0, 0].ToString() + "  :  " + topographyLatLong[0, 0].ToString());
+        Debug.Log("point 0,end:  " + latlong[0, y-1].ToString() + "  :  " + topographyLatLong[0, (int)topoDimens.y-1].ToString());
+        Debug.Log("point end,end:  " + latlong[x-1, y-1].ToString() + "  :  " + topographyLatLong[(int)topoDimens.x - 1, (int)topoDimens.y - 1].ToString());
+        Debug.Log("point end,0:  " + latlong[x-1, 0].ToString() + "  :  " + topographyLatLong[(int)topoDimens.x - 1, 0].ToString());
+
+        Debug.Log("    LatRange: " + latRange.ToString() + "    LonRange: " + lonRange.ToString() + "    topoLatRange: " + topoLatRange.ToString() + "    topoLonRange: " + topoLonRange.ToString());
+        // Get Velocity data
+        
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
 
@@ -505,14 +532,13 @@ public class Manager : MonoBehaviour
 
         //Populate data matrix O(n^3)
 
-
         // Add 2 to each dimension for voxelize buffering later
         lonSet = dim[0] + 2;
         latSet = dim[1] + 2;
         elevSet = dim[2] + 2;
 
-        points = new Point[latSet, elevSet, lonSet];
-        //Debug.Log("lonSet: " + lonSet + "  latSet: " + latSet + "  elevSet: " + elevSet + " dim[0]: " + dim[0] + " dim[1]: " + dim[1] + " dim[2]: " + dim[2]);
+        points = new Point[lonSet, elevSet, latSet];
+        Debug.Log("lonSet: " + lonSet + "  latSet: " + latSet + "  elevSet: " + elevSet + " dim[0]: " + dim[0] + " dim[1]: " + dim[1] + " dim[2]: " + dim[2]);
 
         // MatLab is column major order -> z,y,x
 
@@ -522,7 +548,8 @@ public class Manager : MonoBehaviour
         int lon2 = lon - 1;
         int lat = latSet - 1;
         int lat2 = lat - 1;
-       
+
+        
 
         for (int i = 0; i < elevSet; ++i)
         {
@@ -530,23 +557,23 @@ public class Manager : MonoBehaviour
             for (int j = 0; j < latSet; ++j)
             {
                 int jm1 = j - 1;
-                for (int k = 0; k < lonSet; ++k)
+                for (int k = lonSet- 1; k >= 0; --k)
                 {
                     int km1 = k - 1;
-                    Point tp = new Point();
+                    
                     if (i > 0 && i < ele && j > 0 && j < lat && k > 0 && k < lon) // make space for the shell
                     {
-                        //tp.position = new Vector3(latlong[jm1, km1].x, elev[jm1, km1], latlong[jm1, km1].y);
-                        tp.position = new Vector3(latlong[jm1, km1].x, e, latlong[jm1, km1].y);
+                        Point tp = new Point();
+                        tp.position = new Vector3(latlong[km1, jm1].x, e, latlong[km1, jm1].y);
                         tp.value = Convert.ToSingle(inp_stm.ReadLine());
-                        points[j, i, k] = tp;
+                        points[k, i, j] = tp;
                     }
                 }
             }
         }
 
         inp_stm.Close();
-
+        
         lonSetBounds = new Vector2Int(1, lonSet - 2);
         latSetBounds = new Vector2Int(1, latSet - 2);
         elevSetBounds = new Vector2Int(1, elevSet - 2);
@@ -555,10 +582,12 @@ public class Manager : MonoBehaviour
         // Lerp outer shell to finish cube
         // Doing it here saves a lot of processing time later when voxelizing
         
+
+        
         //Top
-        for (int i = 1; i < lat; ++i)
+        for (int i = 1; i < lon; ++i)
         {
-            for (int j = 1; j < lon; ++j)
+            for (int j = 1; j < lat; ++j)
             {
                 Vector3 vr = points[i, 1, j].position; // one point below
                 Point tp = new Point
@@ -569,11 +598,11 @@ public class Manager : MonoBehaviour
                 points[i, 0, j] = tp;
             }
         }
-
+        
         //Bottom
-        for (int i = 1; i < lat; ++i)
+        for (int i = 1; i < lon; ++i)
         {
-            for (int j = 1; j < lon; ++j)
+            for (int j = 1; j < lat; ++j)
             {
                 Vector3 vr = points[i, ele2, j].position; // one point above
                 Point tp = new Point
@@ -584,49 +613,49 @@ public class Manager : MonoBehaviour
                 points[i, ele, j] = tp;
             }
         }
-
+        
         //Left
         for (int i = 1; i < lat; ++i)
         {
             for (int j = 1; j < ele; ++j)
             {
-                Vector3 vr = points[i, j, 1].position; // one point to the right
+                Vector3 vr = points[1, j, i].position; // one point to the right
                 Point tp = new Point
                 {
                     position = new Vector3(vr.x, vr.y, vr.z),
                     value = float.NaN
                 };
-                points[i, j, 0] = tp;
+                points[0, j, i] = tp;
             }
         }
-
+        
         //Right
         for (int i = 1; i < lat; ++i)
         {
             for (int j = 1; j < ele; ++j)
             {
-                Vector3 vr = points[i, j, lon2].position; // one point to the left
+                Vector3 vr = points[lon2, j, i].position; // one point to the left
                 Point tp = new Point
                 {
                     position = new Vector3(vr.x, vr.y, vr.z),
                     value = float.NaN
                 };
-                points[i, j, lon] = tp;
+                points[lon, j, i] = tp;
             }
         }
-
+        
         //Front
         for (int i = 1; i < ele; ++i)
         {
             for (int j = 1; j < lon; ++j)
             {
-                Vector3 vr = points[1, i, j].position; // one point to the back
+                Vector3 vr = points[j, i, i].position; // one point to the back
                 Point tp = new Point
                 {
                     position = new Vector3(vr.x, vr.y, vr.z),
                     value = float.NaN
                 };
-                points[0, i, j] = tp;
+                points[j, i, 0] = tp;
             }
         }
 
@@ -635,19 +664,19 @@ public class Manager : MonoBehaviour
         {
             for (int j = 1; j < lon; ++j)
             {
-                Vector3 vr = points[lat2, i, j].position; // one point to the front
+                Vector3 vr = points[j, i, lat2].position; // one point to the front
                 Point tp = new Point
                 {
                     position = new Vector3(vr.x, vr.y, vr.z),
                     value = float.NaN
                 };
-                points[lat, i, j] = tp;
+                points[j, i, lat] = tp;
             }
         }
         
-
+        
         yield return Reshade(false);
-
+        
         //Assign the slider information
 
         longitude_slider.GetComponent<SliderConnection>().min.maxValue = lonSet - 2;
@@ -677,11 +706,11 @@ public class Manager : MonoBehaviour
         
         #region BoundingBox
 
-        float xh = latSet * 0.5f;
+        float xh = lonSet * 0.5f;
         float mxh = -xh; --xh;
         float yh = elevSet * 0.5f;
         float myh = (-yh) + 1;
-        float zh = lonSet * 0.5f;
+        float zh = latSet * 0.5f;
         float mzh = -zh; --zh;
 
         
@@ -712,14 +741,11 @@ public class Manager : MonoBehaviour
         // End Create bounding box
 
 
-        //StartCoroutine(RebuildTopography());
-        //Debug.Log("Data Loaded");
-
         cam.GetComponent<DragMouseOrbit>().SetDistance(GetLongestSide() * 2);
         StartCoroutine(RebuildTopography());
-
+        
     }
-    
+
     public void AddColors()
     {
         // Add button to list
@@ -743,25 +769,10 @@ public class Manager : MonoBehaviour
     {
 
         int wMin = 0;
-        int wMax = (int)topoDimens.y-1;
+        int wMax = (int)topoDimens.x-1;
         int dMin = 0;
-        int dMax = (int)topoDimens.x-1;
+        int dMax = (int)topoDimens.y-1;
         
-        //Debug.Log("topoLatRange: " + topoLatRange.ToString());
-        //Debug.Log("DIF topoLatRange: " + (topoLatRange.y - topoLatRange.x));
-        //Debug.Log("topoLonRange: " + topoLonRange.ToString());
-        //Debug.Log("DIF topoLonRange: " + (topoLonRange.y - topoLonRange.x));
-        //Debug.Log("latRange: " + latRange.ToString());
-        //Debug.Log("DIF latRange: " + (latRange.y - latRange.x));
-        //Debug.Log("lonRange: " + lonRange.ToString());
-        //Debug.Log("DIF lonRange: " + (lonRange.y - lonRange.x));
-
-        float wRatio = (latRange.y - latRange.x) / (topoLatRange.y - topoLatRange.x);
-        float dRatio = (lonRange.y - lonRange.x) / (topoLonRange.y - topoLonRange.x);
-
-
-        //Debug.Log("wRatio: " + wRatio + "dRatio: " + dRatio);
-
 
         int wSize = wMax - wMin;
         int dSize = dMax - dMin;
@@ -778,21 +789,16 @@ public class Manager : MonoBehaviour
         {
             for (int d = dMin; d <= dMax; d++, i++)
             {
-                Vector3 p = topographyLatLong[d,w];
+                Vector3 p = topographyLatLong[w,d];
                 colors[i] = Color.white;
                 //vertices[i] = new Vector3(w, -b + p.y, d);
                 vertices[i] = new Vector3(p.x * scale, p.y * elevationScale, p.z * scale);
             }
         }
 
-       // Debug.Log("topoEleRange: " + topoEleRange.ToString());
-        float elevationOffset = ((topoEleRange.y - topoEleRange.x) * 0.5f) * elevationScale + meshObj[0].transform.localPosition.y;
+       
 
-        // Fix this to be more accurrate. the +5f is a temp val - not correct
-        topography.transform.localPosition = new Vector3(topography.transform.localPosition.x,
-            elevationOffset + 5f,
-            topography.transform.localPosition.z);
-        //Debug.Log("size: " + size + " i:" + i);
+        
         Mesh tMesh = new Mesh
         {
             indexFormat = UnityEngine.Rendering.IndexFormat.UInt32,
@@ -817,6 +823,9 @@ public class Manager : MonoBehaviour
         tMesh.RecalculateNormals();
         tMesh.RecalculateTangents();
         topography.GetComponent<MeshFilter>().mesh = tMesh;
+
+        
+        
 
         yield return null;
 
@@ -843,96 +852,90 @@ public class Manager : MonoBehaviour
         int x = 0;
         int y = 0;
 
-        int wSize = latSetBounds.y - latSetBounds.x;
+        int wSize = lonSetBounds.y - lonSetBounds.x;
         int hSize = elevSetBounds.y - elevSetBounds.x;
-        int dSize = lonSetBounds.y - lonSetBounds.x;
+        int dSize = latSetBounds.y - latSetBounds.x;
 
         
         switch (face)
         {
             case 0: x = wSize; y = dSize; break;  // Top 
             case 1: x = wSize; y = dSize; break;  // Bottom
-            case 2: x = wSize; y = hSize; break;  // Left 
-            case 3: x = wSize; y = hSize; break;  // Right
-            case 4: x = hSize; y = dSize; break;  // Front
-            case 5: x = hSize; y = dSize; break;  // Back
+            case 2: x = dSize; y = hSize; break;  // Left 
+            case 3: x = dSize; y = hSize; break;  // Right
+            case 4: x = hSize; y = wSize; break;  // Front
+            case 5: x = hSize; y = wSize; break;  // Back
         }
 
         int size = (x+1) * (y+1);
         Vector3[] vertices = new Vector3[size];
         Color[] colors = new Color[size];
 
-        //Debug.Log("latSetBounds: " + latSetBounds.ToString());
-        //Debug.Log("lonSetBounds: " + lonSetBounds.ToString());
+
         if (face == 0) // Top
         {
             int b = elevSetBounds.x;
-            for (int i = 0, w = latSetBounds.x; w <= latSetBounds.y; w++)
+            for (int i = 0, w = lonSetBounds.x; w <= lonSetBounds.y; w++)
             {
-                for (int d = lonSetBounds.x; d <= lonSetBounds.y; d++, i++)
+                for (int d = latSetBounds.x; d <= latSetBounds.y; d++, i++)
                 {
                     Vector3 p = points[w, b, d].position;
-                    //if (counter < 1000 &&  d == lonSetBounds.y) { counter++; Debug.Log(i + ":  " + p.ToString("F6")); }
                     colors[i] = points[w, b, d].color;
-                    vertices[i] = (lonLatView)? new Vector3(p.x * scale, -b + p.y, p.z * scale): 
-                        new Vector3(w * scale, -b + p.y * elevationScale, d * scale);
+                    vertices[i] = new Vector3(p.x * scale, -b + p.y, p.z * scale);
                 }
             }
         }
         else if (face == 1) // Bottom
         {
             int b = elevSetBounds.y;
-            for (int i = 0, w = latSetBounds.x; w <= latSetBounds.y; w++)
+            for (int i = 0, w = lonSetBounds.x; w <= lonSetBounds.y; w++)
             {
-                for (int d = lonSetBounds.x; d <= lonSetBounds.y; d++, i++)
+                for (int d = latSetBounds.x; d <= latSetBounds.y; d++, i++)
                 {
                     Vector3 p = points[w, b, d].position;
                     colors[i] = points[w, b, d].color;
                     vertices[i] = new Vector3(p.x * scale, -b + p.y, p.z * scale);
-                    //vertices[i] = new Vector3(p.x, -b + p.y, p.z);
                 }
             }
         }
         else if (face == 2) // Left
         {
+            //Debug.Log("Left LatSetBounds: " + latSetBounds.ToString() );
             int b = lonSetBounds.x;
-            for (int i = 0, w = latSetBounds.x; w <= latSetBounds.y; w++)
+            for (int i = 0, d = latSetBounds.x; d <= latSetBounds.y; d++)
             {
                 for (int h = elevSetBounds.x; h <= elevSetBounds.y; h++, i++)
                 {
-                    Vector3 p = points[w, h, b].position;
-                    colors[i] = points[w, h, b].color;
+                    Vector3 p = points[b, h, d].position;
+                    colors[i] = points[b, h, d].color;
                     vertices[i] = new Vector3(p.x * scale, -h + p.y, p.z * scale);
-                    //vertices[i] = new Vector3(w, -h + p.y, b);
-
                 }
             }
         }  
         else if (face == 3) // Right
         {
             int b = lonSetBounds.y;
-            for (int i = 0, w = latSetBounds.x; w <= latSetBounds.y; w++)
+            for (int i = 0, d = latSetBounds.x; d <= latSetBounds.y; d++)
             {
                 for (int h = elevSetBounds.x; h <= elevSetBounds.y; h++, i++)
                 {
-                    Vector3 p = points[w, h, b].position;
-                    colors[i] = points[w, h, b].color;
+                    Vector3 p = points[b, h, d].position;
+                    colors[i] = points[b, h, d].color;
                     vertices[i] = new Vector3(p.x * scale, -h + p.y , p.z * scale);
-                    //vertices[i] = new Vector3(w, -h + p.y, b);
                 }
             }
         } 
         else if (face == 4) // Front
         {
             int b = latSetBounds.x;
+
             for (int i = 0, h = elevSetBounds.x; h <= elevSetBounds.y; h++)
             {
-                for (int d = lonSetBounds.x; d <= lonSetBounds.y; d++, i++)
+                for (int w = lonSetBounds.x; w <= lonSetBounds.y; w++, i++)
                 {
-                    Vector3 p = points[b, h, d].position;
-                    colors[i] = points[b, h, d].color;
+                    Vector3 p = points[w, h, b].position;
+                    colors[i] = points[w, h, b].color;
                     vertices[i] = new Vector3(p.x * scale, -h + p.y, p.z * scale);
-                    //vertices[i] = new Vector3(b, -h + p.y, d);
                 }
             }
         }
@@ -941,12 +944,11 @@ public class Manager : MonoBehaviour
             int b = latSetBounds.y;
             for (int i = 0, h = elevSetBounds.x; h <= elevSetBounds.y; h++)
             {
-                for (int d = lonSetBounds.x; d <= lonSetBounds.y; d++, i++)
+                for (int w = lonSetBounds.x; w <= lonSetBounds.y; w++, i++)
                 {
-                    Vector3 p = points[b, h, d].position;
-                    colors[i] = points[b, h, d].color;
+                    Vector3 p = points[w, h, b].position;
+                    colors[i] = points[w, h, b].color;
                     vertices[i] = new Vector3(p.x * scale, -h + p.y, p.z * scale);
-                    //vertices[i] = new Vector3(b, -h + p.y, d);
                 }
             }
         }
@@ -1005,17 +1007,14 @@ public class Manager : MonoBehaviour
         while (shading == true) yield return null;
         //Arbitrarily start with face 0 , top down build
 
-        //Debug.Log("SetVoxelState elevSet: " + elevSet + " lonSet: " + lonSet + " latSet: " + latSet);
-        
-        for (int x = 0; x < latSet; x++)
+        for (int x = 0; x < lonSet; ++x)
         {
-            for (int y = 0; y < elevSet; y++)
+            for (int y = 0; y < elevSet; ++y)
             {
-                for (int z = 0; z < lonSet; z++)
+                for (int z = 0; z < latSet; ++z)
                 {
                     Vector3 t = points[x, y, z].position;
-                    //points[x, y, z].currentPos = new Vector3(t.x*scale, (float)(-y + t.y) , t.z * scale);
-                    points[x, y, z].currentPos = new Vector3(t.x * scale, (float)(-y + t.y), t.z * scale);
+                    points[x, y, z].currentPos = new Vector3(scaleLON * t.x * scale, (float)(-y + t.y), scaleLON * t.z * scale);
                 }
             }
         }
@@ -1103,6 +1102,10 @@ public class Manager : MonoBehaviour
         }
     }
 
+
+
+
+
     public IEnumerator Voxelize(Color colorval)
     {
         //Debug.Log("Color voxelizing: " + colorval);
@@ -1111,16 +1114,16 @@ public class Manager : MonoBehaviour
 
         
         Vector3 t = Vector3.zero;
-        int wm1 = latSet - 1;
+        int wm1 = lonSet - 1;
         int hm1 = elevSet - 1;
-        int dm1 = lonSet - 1;
+        int dm1 = latSet - 1;
 
-        int iS = latSetBounds.x - 1;
-        int iE = latSetBounds.y + 1;
+        int iS = lonSetBounds.x - 1;
+        int iE = lonSetBounds.y + 1;
         int jS = elevSetBounds.x - 1;
         int jE = elevSetBounds.y + 1;
-        int kS = lonSetBounds.x - 1;
-        int kE = lonSetBounds.y + 1;
+        int kS = latSetBounds.x - 1;
+        int kE = latSetBounds.y + 1;
 
         int stopStep = 5;
         int[] waitSet = new int[stopStep];
@@ -1639,4 +1642,5 @@ public class Manager : MonoBehaviour
         0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0
     };
 
+    
 }
