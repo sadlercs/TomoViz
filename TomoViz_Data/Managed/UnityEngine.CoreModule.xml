@@ -1619,7 +1619,7 @@ Note: Using raw JNI functions requires advanced knowledge of the Android Java Na
     </member>
     <member name="P:UnityEngine.Application.isLoadingLevel">
       <summary>
-        <para>Is some level being loaded? (Read Only)</para>
+        <para>Is some level being loaded? (Read Only) (Obsolete).</para>
       </summary>
     </member>
     <member name="P:UnityEngine.Application.isMobilePlatform">
@@ -2073,7 +2073,7 @@ Here is an example of handling the callback:</para>
     </member>
     <member name="F:UnityEngine.Assertions.Assert.raiseExceptions">
       <summary>
-        <para>Should an exception be thrown on a failure.</para>
+        <para>Whether Unity should throw an exception on a failure.</para>
       </summary>
     </member>
     <member name="M:UnityEngine.Assertions.Assert.AreApproximatelyEqual(System.Single,System.Single)">
@@ -3401,7 +3401,7 @@ Note: Every time you call the method with tolerance specified, a new instance of
     </member>
     <member name="M:UnityEngine.Caching.ClearCache">
       <summary>
-        <para>Removes all AssetBundle and Procedural Material content that has been cached by the current application.</para>
+        <para>Removes all AssetBundle content that has been cached by the current application.</para>
       </summary>
       <param name="expiration">The number of seconds that AssetBundles may remain unused in the cache.</param>
       <returns>
@@ -3410,7 +3410,7 @@ Note: Every time you call the method with tolerance specified, a new instance of
     </member>
     <member name="M:UnityEngine.Caching.ClearCache(System.Int32)">
       <summary>
-        <para>Removes all AssetBundle and Procedural Material content that has been cached by the current application.</para>
+        <para>Removes all AssetBundle content that has been cached by the current application.</para>
       </summary>
       <param name="expiration">The number of seconds that AssetBundles may remain unused in the cache.</param>
       <returns>
@@ -4191,7 +4191,7 @@ The default value is Camera.MonoOrStereoscopicEye.Left, so Camera.MonoOrStereosc
     </member>
     <member name="F:UnityEngine.Color.a">
       <summary>
-        <para>Alpha component of the color.</para>
+        <para>Alpha component of the color (0 is transparent, 1 is opaque).</para>
       </summary>
     </member>
     <member name="F:UnityEngine.Color.b">
@@ -5426,7 +5426,7 @@ The default value is Camera.MonoOrStereoscopicEye.Left, so Camera.MonoOrStereosc
     </member>
     <member name="T:UnityEngine.Coroutine">
       <summary>
-        <para>MonoBehaviour.StartCoroutine returns a Coroutine. Instances of this class are only used to reference these coroutines and do not hold any exposed properties or functions.</para>
+        <para>MonoBehaviour.StartCoroutine returns a Coroutine. Instances of this class are only used to reference these coroutines, and do not hold any exposed properties or functions.</para>
       </summary>
     </member>
     <member name="T:UnityEngine.CrashReport">
@@ -6506,9 +6506,7 @@ The default value is Camera.MonoOrStereoscopicEye.Left, so Camera.MonoOrStereosc
     </member>
     <member name="T:UnityEngine.DeviceType">
       <summary>
-        <para>Enumeration for SystemInfo.deviceType, denotes a coarse grouping of kinds of devices.
-
-Windows Store Apps: tablets are treated as desktop machines, thus DeviceType.Handheld will only be returned for Windows Phones.</para>
+        <para>Enumeration for SystemInfo.deviceType, denotes a coarse grouping of kinds of devices.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.DeviceType.Console">
@@ -7077,6 +7075,36 @@ Windows Store Apps: tablets are treated as desktop machines, thus DeviceType.Han
         <para>True if the light casts shadows, otherwise False.</para>
       </summary>
     </member>
+    <member name="T:UnityEngine.Experimental.GlobalIllumination.FalloffType">
+      <summary>
+        <para>Available falloff models for baking.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.Experimental.GlobalIllumination.FalloffType.InverseSquared">
+      <summary>
+        <para>Inverse squared distance falloff model.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.Experimental.GlobalIllumination.FalloffType.InverseSquaredNoRangeAttenuation">
+      <summary>
+        <para>Inverse squared distance falloff model (without smooth range attenuation).</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.Experimental.GlobalIllumination.FalloffType.Legacy">
+      <summary>
+        <para>Quadratic falloff model.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.Experimental.GlobalIllumination.FalloffType.Linear">
+      <summary>
+        <para>Linear falloff model.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.Experimental.GlobalIllumination.FalloffType.Undefined">
+      <summary>
+        <para>Falloff model is undefined.</para>
+      </summary>
+    </member>
     <member name="T:UnityEngine.Experimental.GlobalIllumination.LightDataGI">
       <summary>
         <para>The interop structure to pass light information to the light baking backends. There are helper structures for Directional, Point, Spot and Rectangle lights to correctly initialize this structure.</para>
@@ -7090,6 +7118,11 @@ Windows Store Apps: tablets are treated as desktop machines, thus DeviceType.Han
     <member name="F:UnityEngine.Experimental.GlobalIllumination.LightDataGI.coneAngle">
       <summary>
         <para>The cone angle for spot lights.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.Experimental.GlobalIllumination.LightDataGI.falloff">
+      <summary>
+        <para>The falloff model to use for baking point and spot lights.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.Experimental.GlobalIllumination.LightDataGI.indirectColor">
@@ -7369,6 +7402,11 @@ Windows Store Apps: tablets are treated as desktop machines, thus DeviceType.Han
         <para>The direct light color.</para>
       </summary>
     </member>
+    <member name="F:UnityEngine.Experimental.GlobalIllumination.PointLight.falloff">
+      <summary>
+        <para>The falloff model to use for baking the point light.</para>
+      </summary>
+    </member>
     <member name="F:UnityEngine.Experimental.GlobalIllumination.PointLight.indirectColor">
       <summary>
         <para>The indirect light color.</para>
@@ -7472,6 +7510,11 @@ Windows Store Apps: tablets are treated as desktop machines, thus DeviceType.Han
     <member name="F:UnityEngine.Experimental.GlobalIllumination.SpotLight.coneAngle">
       <summary>
         <para>The outer angle for the spot light.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.Experimental.GlobalIllumination.SpotLight.falloff">
+      <summary>
+        <para>The falloff model to use for baking the spot light.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.Experimental.GlobalIllumination.SpotLight.indirectColor">
@@ -9170,6 +9213,12 @@ The RenderPass mechanism has the following limitations:
         <para>Defines a series of commands and settings that describes how Unity renders a frame.</para>
       </summary>
     </member>
+    <member name="?:UnityEngine.Experimental.Rendering.RenderPipeline.beginCameraRendering(System.Action`1&lt;UnityEngine.Camera&gt;)">
+      <summary>
+        <para>Call that should be issued by an SRP when the SRP begins to render a Camera so that other systems can inject per camera render logic.</para>
+      </summary>
+      <param name="value"></param>
+    </member>
     <member name="?:UnityEngine.Experimental.Rendering.RenderPipeline.beginFrameRendering(System.Action`1&lt;UnityEngine.Camera[]&gt;)">
       <summary>
         <para>Call that should be issued by an SRP when the SRP begins to render so that other systems can inject 'pre render' logic.</para>
@@ -9181,9 +9230,15 @@ The RenderPass mechanism has the following limitations:
         <para>When the IRenderPipeline is invalid or destroyed this returns true.</para>
       </summary>
     </member>
+    <member name="M:UnityEngine.Experimental.Rendering.RenderPipeline.BeginCameraRendering(UnityEngine.Camera)">
+      <summary>
+        <para>Call the delegate used during SRP rendering before a single camera starts rendering.</para>
+      </summary>
+      <param name="camera"></param>
+    </member>
     <member name="M:UnityEngine.Experimental.Rendering.RenderPipeline.BeginFrameRendering(UnityEngine.Camera[])">
       <summary>
-        <para>Delegate used during SRP rendering before a render begins.</para>
+        <para>Call the delegate used during SRP rendering before a render begins.</para>
       </summary>
       <param name="cameras"></param>
     </member>
@@ -10646,7 +10701,7 @@ All of the commands within the buffer are guaranteed to be executed on the same 
     </member>
     <member name="P:UnityEngine.GameObject.activeInHierarchy">
       <summary>
-        <para>Is the GameObject active in the scene?</para>
+        <para>Defines whether the GameObject is active in the Scene.</para>
       </summary>
     </member>
     <member name="P:UnityEngine.GameObject.activeSelf">
@@ -12480,7 +12535,7 @@ Color buffers to render into (for multiple render target effects).</param>
     </member>
     <member name="F:UnityEngine.HideFlags.HideAndDontSave">
       <summary>
-        <para>A combination of not shown in the hierarchy, not saved to to scenes and not unloaded by The object will not be unloaded by Resources.UnloadUnusedAssets.</para>
+        <para>The GameObject is not shown in the Hierarchy, not saved to to Scenes, and not unloaded by Resources.UnloadUnusedAssets.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.HideFlags.HideInHierarchy">
@@ -17435,9 +17490,12 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
     </member>
     <member name="M:UnityEngine.Mathf.Cos(System.Single)">
       <summary>
-        <para>Returns the cosine of angle f in radians.</para>
+        <para>Returns the cosine of angle f.</para>
       </summary>
-      <param name="f"></param>
+      <param name="f">The input angle, in radians.</param>
+      <returns>
+        <para>The return value between -1 and 1.</para>
+      </returns>
     </member>
     <member name="F:UnityEngine.Mathf.Deg2Rad">
       <summary>
@@ -17464,7 +17522,7 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
     </member>
     <member name="M:UnityEngine.Mathf.Floor(System.Single)">
       <summary>
-        <para>Returns the largest integer smaller to or equal to f.</para>
+        <para>Returns the largest integer smaller than or equal to f.</para>
       </summary>
       <param name="f"></param>
     </member>
@@ -17706,9 +17764,9 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
     </member>
     <member name="M:UnityEngine.Mathf.Sin(System.Single)">
       <summary>
-        <para>Returns the sine of angle f in radians.</para>
+        <para>Returns the sine of angle f.</para>
       </summary>
-      <param name="f">The argument as a radian.</param>
+      <param name="f">The input angle, in radians.</param>
       <returns>
         <para>The return value between -1 and +1.</para>
       </returns>
@@ -21020,7 +21078,7 @@ The Player ID is always 1, because only one Editor can be connected.</param>
     </member>
     <member name="P:UnityEngine.Profiling.Profiler.enableBinaryLog">
       <summary>
-        <para>Sets profiler output file in built players.</para>
+        <para>Enables the logging of profiling data to a file.</para>
       </summary>
     </member>
     <member name="P:UnityEngine.Profiling.Profiler.enabled">
@@ -21030,7 +21088,7 @@ The Player ID is always 1, because only one Editor can be connected.</param>
     </member>
     <member name="P:UnityEngine.Profiling.Profiler.logFile">
       <summary>
-        <para>Sets profiler output file in built players.</para>
+        <para>Specifies the file to use when writing profiling data.</para>
       </summary>
     </member>
     <member name="P:UnityEngine.Profiling.Profiler.maxNumberOfSamplesPerFrame">
@@ -23939,6 +23997,11 @@ See Also: ReflectionProbeTimeSlicingMode.</para>
         <para>Create a new empty command buffer.</para>
       </summary>
     </member>
+    <member name="M:UnityEngine.Rendering.CommandBuffer.DisableScissorRect">
+      <summary>
+        <para>Add a command to disable the hardware scissor rectangle.</para>
+      </summary>
+    </member>
     <member name="M:UnityEngine.Rendering.CommandBuffer.DisableShaderKeyword(System.String)">
       <summary>
         <para>Adds a command to disable global shader keyword.</para>
@@ -24040,6 +24103,12 @@ InvalidOperationException will be thrown if the current platform doesn't support
       <param name="material">Material to use.</param>
       <param name="submeshIndex">Which subset of the mesh to render.</param>
       <param name="shaderPass">Which pass of the shader to use (default is -1, which renders all passes).</param>
+    </member>
+    <member name="M:UnityEngine.Rendering.CommandBuffer.EnableScissorRect(UnityEngine.Rect)">
+      <summary>
+        <para>Add a command to enable the hardware scissor rectangle.</para>
+      </summary>
+      <param name="scissor">Viewport rectangle in pixel coordinates.</param>
     </member>
     <member name="M:UnityEngine.Rendering.CommandBuffer.EnableShaderKeyword(System.String)">
       <summary>
@@ -27073,11 +27142,6 @@ See RenderTexture.useMipMap.</para>
         <para>In the player on Nintendo Switch.</para>
       </summary>
     </member>
-    <member name="F:UnityEngine.RuntimePlatform.TizenPlayer">
-      <summary>
-        <para>In the player on Tizen.</para>
-      </summary>
-    </member>
     <member name="F:UnityEngine.RuntimePlatform.WebGLPlayer">
       <summary>
         <para>In the player on WebGL</para>
@@ -27234,9 +27298,9 @@ A scene may be invalid if, for example, you tried to open a scene that does not 
     </member>
     <member name="?:UnityEngine.SceneManagement.SceneManager.activeSceneChanged(UnityEngine.Events.UnityAction`2&lt;UnityEngine.SceneManagement.Scene,UnityEngine.SceneManagement.Scene&gt;)">
       <summary>
-        <para>Add a delegate to this to get notifications when the active Scene has changed</para>
+        <para>Subscribe to this event to get notified when the active Scene has changed.</para>
       </summary>
-      <param name="value"></param>
+      <param name="value">Previous active scene and the new active scene.</param>
     </member>
     <member name="P:UnityEngine.SceneManagement.SceneManager.sceneCount">
       <summary>
@@ -31701,6 +31765,12 @@ Useful for restarting a trail from a new position.</para>
         <para>True if struct is blittable, otherwise false.</para>
       </returns>
     </member>
+    <member name="M:Unity.Collections.LowLevel.Unsafe.UnsafeUtility.IsValidAllocator(Unity.Collections.Allocator)">
+      <summary>
+        <para>Returns true if the allocator label is valid and can be used to allocate or deallocate memory.</para>
+      </summary>
+      <param name="allocator"></param>
+    </member>
     <member name="M:Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc">
       <summary>
         <para>Allocate memory.</para>
@@ -32545,6 +32615,11 @@ See Also: JobHandle.CombineDependencies.</para>
       </summary>
       <param name="version">Unity version that this assembly with compatible with.</param>
     </member>
+    <member name="A:UnityEngine.CoreModule">
+      <summary>
+        <para>The Core module implements basic classes required for Unity to function.</para>
+      </summary>
+    </member>
     <member name="T:UnityEngine.UserAuthorization">
       <summary>
         <para>Constants to pass to Application.RequestUserAuthorization.</para>
@@ -33165,6 +33240,9 @@ See Also: JobHandle.CombineDependencies.</para>
       </summary>
       <param name="from">The vector from which the angular difference is measured.</param>
       <param name="to">The vector to which the angular difference is measured.</param>
+      <returns>
+        <para>The angle in degrees between the two vectors.</para>
+      </returns>
     </member>
     <member name="M:UnityEngine.Vector3.ClampMagnitude(UnityEngine.Vector3,System.Single)">
       <summary>

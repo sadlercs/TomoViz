@@ -1750,6 +1750,11 @@
         <para>Stops playing the movie, and rewinds it to the beginning.</para>
       </summary>
     </member>
+    <member name="A:UnityEngine.AudioModule">
+      <summary>
+        <para>The Audio module implements Unity's audio system.</para>
+      </summary>
+    </member>
     <member name="T:UnityEngine.WebCamDevice">
       <summary>
         <para>A structure describing the webcam device.</para>

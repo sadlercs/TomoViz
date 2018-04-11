@@ -2569,7 +2569,7 @@
     </member>
     <member name="P:UnityEngine.Rigidbody2D.mass">
       <summary>
-        <para>Mass of the rigidbody.</para>
+        <para>Mass of the Rigidbody.</para>
       </summary>
     </member>
     <member name="P:UnityEngine.Rigidbody2D.position">
@@ -3098,6 +3098,11 @@
     <member name="P:UnityEngine.TargetJoint2D.target">
       <summary>
         <para>The world-space position that the joint will attempt to move the body to.</para>
+      </summary>
+    </member>
+    <member name="A:UnityEngine.Physics2DModule">
+      <summary>
+        <para>The Physics2d module implements 2D physics in Unity.</para>
       </summary>
     </member>
     <member name="T:UnityEngine.WheelJoint2D">

@@ -4061,5 +4061,10 @@ To get the current particle age, simply multiply X by Y.</para>
         <para>Fourth UV channel.</para>
       </summary>
     </member>
+    <member name="A:UnityEngine.ParticleSystemModule">
+      <summary>
+        <para>The ParticleSystem module implements Unity's particle system.</para>
+      </summary>
+    </member>
   </members>
 </doc>

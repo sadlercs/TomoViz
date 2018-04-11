@@ -29,5 +29,10 @@
         <para>(Legacy Particles) Renders particles on to the screen.</para>
       </summary>
     </member>
+    <member name="A:UnityEngine.ParticlesLegacyModule">
+      <summary>
+        <para>The ParticlesLegacy module implements the legacy particle system in Unity.</para>
+      </summary>
+    </member>
   </members>
 </doc>

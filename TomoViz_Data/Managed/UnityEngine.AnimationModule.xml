@@ -3547,5 +3547,10 @@
         <para>Called at each Update frame except for the first and last frame.</para>
       </summary>
     </member>
+    <member name="A:UnityEngine.AnimationModule">
+      <summary>
+        <para>The Animation module implements Unity's animation system.</para>
+      </summary>
+    </member>
   </members>
 </doc>

@@ -809,6 +809,11 @@
         <para>The forth texture coordinate set of the mesh, if present.</para>
       </summary>
     </member>
+    <member name="A:UnityEngine.TextRenderingModule">
+      <summary>
+        <para>The TextRendering module provides access to Unity's text rendering system.</para>
+      </summary>
+    </member>
     <member name="T:UnityEngine.VerticalWrapMode">
       <summary>
         <para>Wrapping modes for text that reaches the vertical boundary.</para>

@@ -4,5 +4,10 @@
     <assembly>
       <name>UnityEngine.FacebookModule</name>
     </assembly>
+    <member name="A:UnityEngine.FacebookModule">
+      <summary>
+        <para>The Facebook module is required to initialize the Facebook platform support.</para>
+      </summary>
+    </member>
   </members>
 </doc>

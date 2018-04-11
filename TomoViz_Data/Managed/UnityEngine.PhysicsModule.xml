@@ -2381,6 +2381,11 @@ Note that IgnoreLayerCollision will reset the trigger state of affected collider
         <para>The maximum allowed error between the current spring length and the length defined by minDistance and maxDistance.</para>
       </summary>
     </member>
+    <member name="A:UnityEngine.PhysicsModule">
+      <summary>
+        <para>The Physics module implements 3D physics in Unity.</para>
+      </summary>
+    </member>
     <member name="T:UnityEngine.WheelFrictionCurve">
       <summary>
         <para>WheelFrictionCurve is used by the WheelCollider to describe friction properties of the wheel tire.</para>

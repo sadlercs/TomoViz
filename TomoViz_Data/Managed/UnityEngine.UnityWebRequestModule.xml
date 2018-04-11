@@ -868,6 +868,11 @@ You can yield until it continues, register an event handler with AsyncOperation.
       </summary>
       <param name="data">Raw data to transmit to the remote server.</param>
     </member>
+    <member name="A:UnityEngine.UnityWebRequestModule">
+      <summary>
+        <para>The UnityWebRequest module lets you communicate with http services.</para>
+      </summary>
+    </member>
     <member name="T:UnityEngine.WWWForm">
       <summary>
         <para>Helper class to generate form data to post to web servers using the UnityWebRequest or WWW classes.</para>

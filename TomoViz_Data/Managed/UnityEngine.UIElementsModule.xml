@@ -1956,16 +1956,28 @@
         <para>True if the layout of the element has changed.</para>
       </summary>
     </member>
+    <member name="P:UnityEngine.Experimental.UIElements.PostLayoutEvent.newRect">
+      <summary>
+        <para>The new dimensions of the element.</para>
+      </summary>
+    </member>
+    <member name="P:UnityEngine.Experimental.UIElements.PostLayoutEvent.oldRect">
+      <summary>
+        <para>The old dimensions of the element.</para>
+      </summary>
+    </member>
     <member name="M:UnityEngine.Experimental.UIElements.PostLayoutEvent.#ctor">
       <summary>
         <para>Constructor. Avoid newing events. Instead, use GetPooled() to get an event from a pool of reusable events.</para>
       </summary>
     </member>
-    <member name="M:UnityEngine.Experimental.UIElements.PostLayoutEvent.GetPooled(System.Boolean)">
+    <member name="M:UnityEngine.Experimental.UIElements.PostLayoutEvent.GetPooled(System.Boolean,UnityEngine.Rect,UnityEngine.Rect)">
       <summary>
-        <para>Get an event from the event pool and initialize it with the given values. Use this function instead of newing events. Events obtained from this function should be released back to the pool using ReleaseEvent().</para>
+        <para>Gets an event from the event pool and initializes the event with the specified values. Use this method instead of creating a new event. An event obtained with this method should be released back to the pool using ReleaseEvent().</para>
       </summary>
       <param name="hasNewLayout">Whether the target layout changed.</param>
+      <param name="oldRect">The old dimensions of the element.</param>
+      <param name="newRect">The new dimensions of the element.</param>
       <returns>
         <para>An event.</para>
       </returns>

@@ -217,5 +217,10 @@ Analogous to the version parameter for WWW.LoadFromCacheOrDownload.</param>
         <para>A UnityWebRequest configured to downloading a Unity Asset Bundle.</para>
       </returns>
     </member>
+    <member name="A:UnityEngine.UnityWebRequestAssetBundleModule">
+      <summary>
+        <para>The UnityWebRequestAudio module provides the DownloadHandlerAssetBundle class to use UnityWebRequest to download Asset Bundles.</para>
+      </summary>
+    </member>
   </members>
 </doc>

@@ -1,6 +1,10 @@
-﻿using System;
+﻿// The TomoViz project
+// Shawn Slater
+
+
+
+using System;
 using System.IO;
-using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -51,6 +55,7 @@ public class Manager : MonoBehaviour
     private int lonSet = 0;
     private int latSet = 0;
     private int elevSet = 0;
+    private bool topologyBuilt = false;
 
     private bool settingState = false;
     public GameObject primCube;
@@ -106,10 +111,10 @@ public class Manager : MonoBehaviour
         // Create a default color profile
         gradient = colorMap.GetPixels();
 
-     
         float range = 256f / (max - min);
         float maxmin1 = max - 1f;
 
+        // Setup a default clamped color list from the color profile
         colorList = new List<GameObject>();
         float[] clampValues = new float[] { -3f, -2, -1, 0, 1, 2, 3 };
         for (int i = 0; i < clampValues.Length-1; ++i)
@@ -122,31 +127,43 @@ public class Manager : MonoBehaviour
         }
 
 
-
+        // Choosing a loader is system specific on how to browse files
+        // so for now, just load the data in the Resources folder (in editor)
+        // or in the Data Files folder (for a compiled desktop project) and
+        // name it x.dat, or you can change this to whatever you want.
         StartCoroutine(ParseData("x.dat"));
-        //StartCoroutine(ParseData("Endeavor.dat"));
 
     }
 
+    // Simple delegate to switch between clamped and unclamped color options
     public delegate float DelVal(ref float low, ref float high, ref float val);
 
+    // In a contoured view, we see clamped values. 
+    // We need the data to be clamped in our voxelization.
+    // We clamp it because using threshold values do not work
+    // for this type of data viewing so instead do a clamp and match.
+    // We should add contour lines in the future.
     private static float Contour(ref float low, ref float high, ref float val)
     {
         float rVal = Mathf.Round(val);
         return (rVal < low) ? low : (rVal > high) ? high : rVal;
     }
 
+    // In the gradient option, we can see finer details in the volume shell
+    // This is not used for voxelization
     private static float Gradient(ref float low, ref float high, ref float val)
     {
         return (val < low) ? low : (val > high) ? high : val;
     }
 
+    // A public function used for the UI to turn on/off topography view
     public void ShowTopography()
     {
         showingTopography = !showingTopography;
         topography.SetActive(showingTopography);
     }
 
+    // Get the longest side of the volume. Used for camera distance
     public int GetLongestSide()
     {
         int longest = lonSetBounds.y;
@@ -161,12 +178,14 @@ public class Manager : MonoBehaviour
         return longest;
     }
 
+    // A public function used for the UI to change elevation scale
     public void ScaleElevation()
     {
         elevationScale = elevationScale_slider.value;
         StartCoroutine(RebuildTopography());
     }
 
+    // This creates a wireview of the initial volume set. Needs to be fixed
     public void BoundingBox()
     {
         bBox = !bBox;
@@ -177,6 +196,7 @@ public class Manager : MonoBehaviour
         meshObj[9].SetActive(bBox);
     }
 
+    // We can snap the volume to be at a fixed edge or always centered
     public void SnapToBB()
     {
 
@@ -229,6 +249,7 @@ public class Manager : MonoBehaviour
         */
     }
 
+    // A public function used for the UI to turn on/off shell view
     public void ShowShell()
     {
         bool show = showShell_toggle.isOn;
@@ -242,6 +263,7 @@ public class Manager : MonoBehaviour
         }
     }
 
+    // A public function used for the UI to turn on/off voxel volume view
     public void ShowVolume()
     {
         bool show = showVolume_toggle.isOn;
@@ -255,6 +277,7 @@ public class Manager : MonoBehaviour
         }
     }
 
+    // Reshade the color sets for contour or gradient
     public IEnumerator Reshade(bool VOX)
     {
         DelVal Shading;
@@ -349,6 +372,7 @@ public class Manager : MonoBehaviour
 
     }
 
+    // A public function used for the UI to switch from contour/gradient view
     public void SetContour()
     {
         contourEnabled = !contourEnabled;
@@ -356,6 +380,9 @@ public class Manager : MonoBehaviour
         StartCoroutine(Reshade(false));
     }
 
+    // This is the primary input function where data is parsed in from the data file
+    // and assigned to needed data structures. We should cut this up into smaller 
+    // functions for better clarity.
     public IEnumerator ParseData(string fileName)
     {
         //Debug.Log("Loading Data");
@@ -366,10 +393,8 @@ public class Manager : MonoBehaviour
         int y;
         int x;
         int total = 1;
-        
+        topologyBuilt = false;
         StreamReader inp_stm = new StreamReader(Application.dataPath + "/Resources/" + fileName);
-
-
         string inp_ln;
 
         /*
@@ -406,7 +431,6 @@ public class Manager : MonoBehaviour
         List<string> elevationData = new List<string>(inp_ln.Split(' '));
         if (!(Convert.ToInt32(elevationData[0]) == x) || !(Convert.ToInt32(elevationData[1]) == y)) Debug.Log("error in topoSize");
 
-
         Debug.Log("lonInc: " + lonInc + "   latInc: " + latInc);
         for (int j = y-1; j >= 0; --j)
         {
@@ -425,7 +449,6 @@ public class Manager : MonoBehaviour
 
         inp_ln = inp_stm.ReadLine();
         List<string> dimens = new List<string>(inp_ln.Split(' '));
-        //Debug.Log("Velocity Latitude dimensions: " + inp_ln);
 
         Vector2[,] latlong;
         if (dimens.Count != 2)
@@ -455,7 +478,6 @@ public class Manager : MonoBehaviour
                 float val = Convert.ToSingle(inp_stm.ReadLine());
 
                 // convert LAT coordinates to mappable range N/W
-                //scaleLON * (180f + latlong[km1, jm1].x), e, scaleLAT * (90f - latlong[km1, jm1].y));
                 latlong[i, j].y = scaleLAT * (90f - val);
                 if (val < latRange.x) latRange.x = val; else if (val > latRange.y) latRange.y = val;
             }
@@ -490,7 +512,6 @@ public class Manager : MonoBehaviour
                 float val = Convert.ToSingle(inp_stm.ReadLine());
 
                 // convert LON coordinates to mappable range E/W
-                
                 latlong[i, j].x = scaleLON * (180f + val);
                 if (val < lonRange.x) lonRange.x = val; else if (val > lonRange.y) lonRange.y = val;
 
@@ -498,15 +519,16 @@ public class Manager : MonoBehaviour
         }
 
 
-
+        /*
         Debug.Log("point 0,0:  " + latlong[0, 0].ToString() + "  :  " + topographyLatLong[0, 0].ToString());
         Debug.Log("point 0,end:  " + latlong[0, y-1].ToString() + "  :  " + topographyLatLong[0, (int)topoDimens.y-1].ToString());
         Debug.Log("point end,end:  " + latlong[x-1, y-1].ToString() + "  :  " + topographyLatLong[(int)topoDimens.x - 1, (int)topoDimens.y - 1].ToString());
         Debug.Log("point end,0:  " + latlong[x-1, 0].ToString() + "  :  " + topographyLatLong[(int)topoDimens.x - 1, 0].ToString());
-
         Debug.Log("    LatRange: " + latRange.ToString() + "    LonRange: " + lonRange.ToString() + "    topoLatRange: " + topoLatRange.ToString() + "    topoLonRange: " + topoLonRange.ToString());
-        // Get Velocity data
+        */
         
+        // Get Velocity data
+
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
 
@@ -538,7 +560,7 @@ public class Manager : MonoBehaviour
         elevSet = dim[2] + 2;
 
         points = new Point[lonSet, elevSet, latSet];
-        Debug.Log("lonSet: " + lonSet + "  latSet: " + latSet + "  elevSet: " + elevSet + " dim[0]: " + dim[0] + " dim[1]: " + dim[1] + " dim[2]: " + dim[2]);
+        //Debug.Log("lonSet: " + lonSet + "  latSet: " + latSet + "  elevSet: " + elevSet + " dim[0]: " + dim[0] + " dim[1]: " + dim[1] + " dim[2]: " + dim[2]);
 
         // MatLab is column major order -> z,y,x
 
@@ -677,28 +699,30 @@ public class Manager : MonoBehaviour
         
         yield return Reshade(false);
         
-        //Assign the slider information
+        // Assign the slider information
+        // We will use this to change the view of the volume through slicing of the indices
+        // We also need to make sure that the values do not go outside of the 3D matrix
 
         longitude_slider.GetComponent<SliderConnection>().min.maxValue = lonSet - 2;
-        longitude_slider.GetComponent<SliderConnection>().min.minValue = 1;
+        longitude_slider.GetComponent<SliderConnection>().min.minValue = 2;
         longitude_slider.GetComponent<SliderConnection>().max.maxValue = lonSet - 2;
-        longitude_slider.GetComponent<SliderConnection>().max.minValue = 1;
+        longitude_slider.GetComponent<SliderConnection>().max.minValue = 2;
         longitude_slider.GetComponent<SliderConnection>().max.value = lonSet - 2;
-        longitude_slider.GetComponent<SliderConnection>().min.value = 1;
+        longitude_slider.GetComponent<SliderConnection>().min.value = 2;
 
         latitude_slider.GetComponent<SliderConnection>().min.maxValue = latSet - 2;
-        latitude_slider.GetComponent<SliderConnection>().min.minValue = 1;
+        latitude_slider.GetComponent<SliderConnection>().min.minValue = 2;
         latitude_slider.GetComponent<SliderConnection>().max.maxValue = latSet - 2;
-        latitude_slider.GetComponent<SliderConnection>().max.minValue = 1;
+        latitude_slider.GetComponent<SliderConnection>().max.minValue = 2;
         latitude_slider.GetComponent<SliderConnection>().max.value = latSet - 2;
-        latitude_slider.GetComponent<SliderConnection>().min.value = 1;
+        latitude_slider.GetComponent<SliderConnection>().min.value = 2;
 
         elevation_slider.GetComponent<SliderConnection>().min.maxValue = elevSet - 2;
-        elevation_slider.GetComponent<SliderConnection>().min.minValue = 1;
+        elevation_slider.GetComponent<SliderConnection>().min.minValue = 2;
         elevation_slider.GetComponent<SliderConnection>().max.maxValue = elevSet - 2;
-        elevation_slider.GetComponent<SliderConnection>().max.minValue = 1;
+        elevation_slider.GetComponent<SliderConnection>().max.minValue = 2;
         elevation_slider.GetComponent<SliderConnection>().max.value = elevSet - 2;
-        elevation_slider.GetComponent<SliderConnection>().min.value = 1;
+        elevation_slider.GetComponent<SliderConnection>().min.value = 2;
 
 
         // Create bounding box
@@ -735,25 +759,30 @@ public class Manager : MonoBehaviour
         lr.SetPositions(new Vector3[] { new Vector3(xh, myh, zh), new Vector3(xh, yh, zh) });
 
         #endregion BoundingBox
-        
 
-        SnapToBB();
         // End Create bounding box
 
+        SnapToBB();
+        
+
+        // We should start out with the camera being a good distance away from the volume
+        // So let us just arbitrarily make the camera distance twice of the longest side 
+        // of the volume.
 
         cam.GetComponent<DragMouseOrbit>().SetDistance(GetLongestSide() * 2);
         StartCoroutine(RebuildTopography());
         
     }
 
+    // Add color button to list
     public void AddColors()
     {
-        // Add button to list
         GameObject cp = Instantiate(colorProfilePrefab, ColorMaterialContents);
         cp.GetComponent<ChangeMyColor>().color = Color.white;
         colorList.Add(cp);
     }
 
+    // Remove color button from list
     public void RemoveColors()
     {
         if(colorList.Count > 0)
@@ -764,74 +793,94 @@ public class Manager : MonoBehaviour
         }
     }
 
-    // This builds the topography layer
+    // This builds the topographical layer on start 
+    // and when the elevation slider changes
     IEnumerator RebuildTopography()
     {
 
-        int wMin = 0;
-        int wMax = (int)topoDimens.x-1;
-        int dMin = 0;
-        int dMax = (int)topoDimens.y-1;
-        
-
-        int wSize = wMax - wMin;
-        int dSize = dMax - dMin;
-        int x = wSize; int y = dSize;
-
-        int size = (x + 1) * (y + 1);
-        
-        Vector3[] vertices = new Vector3[size];
-        Color[] colors = new Color[size];
-
-        int i, w;
+        // Set the current elevation scale to the slider value
         float elevationScale = elevationScale_slider.value;
-        for (i = 0, w = wMin; w <= wMax; w++)
-        {
-            for (int d = dMin; d <= dMax; d++, i++)
-            {
-                Vector3 p = topographyLatLong[w,d];
-                colors[i] = Color.white;
-                //vertices[i] = new Vector3(w, -b + p.y, d);
-                vertices[i] = new Vector3(p.x * scale, p.y * elevationScale, p.z * scale);
-            }
-        }
 
+
+        // If the topography topology has not been 
+        // initially built then build it now else
+        // just change the scale. We make this a coroutine 
+        // so as to not disrupt the main thread from running
+        if (topologyBuilt == false)
+        {
+            int wMin = 0;
+            int wMax = (int)topoDimens.x - 1;
+            int dMin = 0;
+            int dMax = (int)topoDimens.y - 1;
+
+            int wSize = wMax - wMin;
+            int dSize = dMax - dMin;
+            int x = wSize; int y = dSize;
+
+            int size = (x + 1) * (y + 1);
+
+
+            int i, w;
+
+            Vector3[] vertices = new Vector3[size];
+            Color[] colors = new Color[size];
+
+            for (i = 0, w = wMin; w <= wMax; w++)
+            {
+                for (int d = dMin; d <= dMax; d++, i++)
+                {
+                    Vector3 p = topographyLatLong[w, d];
+                    colors[i] = Color.white;
+                    //vertices[i] = new Vector3(w, -b + p.y, d);
+                    vertices[i] = new Vector3(p.x * scale, p.y, p.z * scale);
+                }
+            }
+
+            Mesh tMesh = new Mesh
+            {
+                indexFormat = UnityEngine.Rendering.IndexFormat.UInt32,
+                vertices = vertices,
+                colors = colors
+            };
+
+
+            int[] triangles = new int[size * 6];
+            int ti, vi;
+            for (ti = 0, vi = 0, i = 0; i < x; i++, vi++)
+            {
+                for (int j = 0; j < y; j++, ti += 6, vi++)
+                {
+                    triangles[ti] = vi;
+                    triangles[ti + 3] = triangles[ti + 2] = vi + 1;
+                    triangles[ti + 4] = triangles[ti + 1] = vi + y + 1;
+                    triangles[ti + 5] = vi + y + 2;
+                }
+            }
+            tMesh.triangles = triangles;
+            tMesh.RecalculateNormals();
+            tMesh.RecalculateTangents();
+            topography.GetComponent<MeshFilter>().mesh = tMesh;
+            topologyBuilt = true;
+            yield return RebuildTopography();
+            yield break;
+        }
+        else
+        {
+            var curScale = topography.transform.localScale;
+            topography.transform.localScale = new Vector3(curScale.x, elevationScale, curScale.z);
+            SnapToBB();
+        }
        
 
-        
-        Mesh tMesh = new Mesh
-        {
-            indexFormat = UnityEngine.Rendering.IndexFormat.UInt32,
-            vertices = vertices,
-            colors = colors
-        };
-
-
-        int[] triangles = new int[size * 6];
-        int ti, vi;
-        for (ti = 0, vi = 0, i = 0; i < x; i++, vi++)
-        {
-            for (int j = 0; j < y; j++, ti += 6, vi++)
-            {
-                triangles[ti] = vi;
-                triangles[ti + 3] = triangles[ti + 2] = vi + 1;
-                triangles[ti + 4] = triangles[ti + 1] = vi + y + 1;
-                triangles[ti + 5] = vi + y + 2;
-            }
-        }
-        tMesh.triangles = triangles;
-        tMesh.RecalculateNormals();
-        tMesh.RecalculateTangents();
-        topography.GetComponent<MeshFilter>().mesh = tMesh;
-
-        
-        
 
         yield return null;
 
     }
 
     // This builds the Square Mesh - Input bounds for x, y, z axis
+    // Rebuilding the face meshes for the shell of the volume set
+    // takes a bit of time so we can coroutine this away from the
+    // main thread.
     IEnumerator RebuildMesh()
     {
         meshes = new Mesh[6];
@@ -845,6 +894,8 @@ public class Manager : MonoBehaviour
 
     }
 
+    // This follows from RebuildMesh() which calculates and returns a 
+    // new face face mesh for all 6 sides of the volume shell 
     private Mesh GetFaceMesh(int face)
     {
 
@@ -953,6 +1004,9 @@ public class Manager : MonoBehaviour
             }
         }
 
+        // We need to have a large mesh size because we do not know in advance
+        // the size of the dataset so we need to set the index format to be
+        // a 32 bit size.
         mesh = new Mesh
         {
             indexFormat = UnityEngine.Rendering.IndexFormat.UInt32,
@@ -960,6 +1014,7 @@ public class Manager : MonoBehaviour
             colors = colors
         };
 
+        // Build the new mesh from the triangles
         int[] triangles = new int[size * 6];
         for (int ti = 0, vi = 0, i = 0; i < x; i++, vi++)
         {
@@ -975,6 +1030,11 @@ public class Manager : MonoBehaviour
         return mesh;
     }
 
+    // On the slider change for Lon/Lat/Elev we can just have all
+    // of the sliders use the same function with different input
+    // variables. The values are set in the editor on the slider game
+    // objet. We should change this later to be Enumerated values
+    // for the sake of clarity.
     public void ChangeSlider(int i)
     {
 
@@ -1002,6 +1062,9 @@ public class Manager : MonoBehaviour
 
     }
 
+    // We want to setup the voxel set to know their coordinates
+    // in 3D space for when we voxelize. This may be reduntant
+    // and can be removed later.
     public IEnumerator SetVoxelState()
     {
         while (shading == true) yield return null;
@@ -1023,17 +1086,25 @@ public class Manager : MonoBehaviour
         
     }
 
+    // Each cell in the voxel volume has a position
+    // and a value.
+
     struct GRIDCELL
     {
         public Vector3[] p;
         public float[] val;
     }
 
+    // We can't start a coroutine from a button action so
+    // we have a public function to start it
     public void VoxelizeButton()
     {
         StartCoroutine(VoxPrep());
     }
 
+    // Clear out the old voxel meshes
+    // Make a new set from the grid cell values
+    // Start the voxelization process
     public IEnumerator VoxPrep()
     {
 
@@ -1068,31 +1139,43 @@ public class Manager : MonoBehaviour
 
         VoxelMeshScrollView.SetActive(false);
 
+        // Reshade the color values.
+        // We need them to be clamped to the color ranges
+        // This may be redundant and can be removed later
         yield return Reshade(true);
-        //while (shading == true) yield return null;
 
         // Set the current state to be voxelized
         yield return SetVoxelState();
+        
+        // Start a set of coroutines to voxelize the data set
+        // Unity 2018.1 introduced the unity job system. So we
+        // will need to switch to that for better performace
+        // as coroutines are not threaded functions.
 
-        //StartCoroutine(Voxelize(Color.clear));
         for (int i = 0; i < colorList.Count; ++i)
         {
             StartCoroutine(Voxelize(colorList[i].GetComponent<ChangeMyColor>().color));
         }
 
+        // This is a small hack that needs to be addressed
+        // Changing to the Unity job system should eliminate
+        // the need for this
         while (voxelSet.Count < colorList.Count)
         {
             yield return new WaitForSeconds(1f);
         }
 
+
+        // Reset the loading UI to let the user know how long 
+        // this process will take.
         voxelLoading.sizeDelta = Vector2.zero;
 
 
-        // Build VoxelMenu Set
+        // Enable the voxel list for viewing and selections
         VoxelMeshScrollView.SetActive(true);
 
 
-        // Make a new list
+        // Make a new list to add to the viewing panel
         VoxelContentPanel.GetComponent<RectTransform>().sizeDelta = new Vector2( VoxelContentPanel.GetComponent<RectTransform>().sizeDelta.x, voxelSet.Count * (VoxelViewPrefab.GetComponent<RectTransform>().sizeDelta.y + 2f));
         for (int i=0; i< colorList.Count; ++i)
         {
@@ -1105,7 +1188,9 @@ public class Manager : MonoBehaviour
 
 
 
-
+    // This is the bread and butter of the voxelization process
+    // We should change this to the Unity Job system for multi-threading
+    // Were each clamped color set is on its own thread
     public IEnumerator Voxelize(Color colorval)
     {
         //Debug.Log("Color voxelizing: " + colorval);
@@ -1125,6 +1210,11 @@ public class Manager : MonoBehaviour
         int kS = latSetBounds.x - 1;
         int kE = latSetBounds.y + 1;
 
+
+        // Bind the values in the user moves the sliders while voxelizing
+        // This is for the updating of the progress bar UI and allows for 
+        // the user to still interact with the scene while voxelizing
+
         int stopStep = 5;
         int[] waitSet = new int[stopStep];
         for(int i = 0; i < stopStep; ++i)
@@ -1136,12 +1226,6 @@ public class Manager : MonoBehaviour
         float loadingHeight = voxelize_button.GetComponent<RectTransform>().rect.height;
         float div = 1f / ((float)colorList.Count * (float)(iE-iS) * (float)(jE-jS))  * (float)loadingWidth;
         
-
-
-
-        // Bind the values in the user moves the sliders while voxelizing
-
-       
 
 
         for (int i = iS; i < iE; i++)
@@ -1185,6 +1269,8 @@ public class Manager : MonoBehaviour
                     grid.p[7] = points[i, j1, k1].currentPos;
                     grid.val[7] = points[i, j1, k1].voxColor == colorval ? 0 : 1;
                     
+
+                    // The algorithm to see where the triangle(s) should go
                     PolygoniseCube(ref grid, 0.5f, ref vertices);
                     
                 }
@@ -1197,6 +1283,7 @@ public class Manager : MonoBehaviour
             
         }
 
+        // If we have vertices to create a voxel mesh then let's make the mesh
         if (vertices.Count > 0)
         {
             Mesh tm = new Mesh
@@ -1318,6 +1405,7 @@ public class Manager : MonoBehaviour
 
     }
 
+    // Helpful vertex interpolation function 
     Vector3 VertexInterp(float isolevel, ref Vector3 p1, ref Vector3 p2, ref float valp1, ref float valp2)
     {
         float mu;
@@ -1346,6 +1434,8 @@ public class Manager : MonoBehaviour
         return (p);
     }
   
+    // The two below static arrays are to speed up the polygonization
+    // of a grid cell. Do not change these.
     public static int[,] triTable = new int[,]
     {
 /*000*/{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},

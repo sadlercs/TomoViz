@@ -4,5 +4,10 @@
     <assembly>
       <name>UnityEngine.BaselibModule</name>
     </assembly>
+    <member name="A:UnityEngine.BaselibModule">
+      <summary>
+        <para>Baselib is a module used internally to provide low-level functionality needed by other modules.</para>
+      </summary>
+    </member>
   </members>
 </doc>

@@ -1,17 +1,3 @@
-Base path: C:/Program Files/Unity/Hub/Editor/2018.1.0b9/Editor/Data
-Cmd: initializeCompiler
-Cmd: compileComputeKernel
-  api=4 insize=8981 outsize=8489 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=5248 outsize=6421 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=2575 outsize=1305 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=1337 outsize=1437 ok=1
+Base path: C:/Program Files/Unity/Hub/Editor/2018.1.0b13/Editor/Data
 Cmd: initializeCompiler
 Cmd: initializeCompiler
-Cmd: initializeCompiler
-Cmd: initializeCompiler
-Cmd: initializeCompiler
-
-Quitting shader compiler process
