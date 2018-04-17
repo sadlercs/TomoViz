@@ -1,6 +1,6 @@
 WindowsStandalone
 PlayerPath?
-C:/Users/shawn/Documents/UnityProjects/TomoViz/TomoViz.exe
+C:/Users/shawn/Documents/GitHub/TomoViz/TomoViz.exe
 SceneListBegin?
 Assets/Scenes/Main.unity
 SceneListEnd?
