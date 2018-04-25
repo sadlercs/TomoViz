@@ -3,11 +3,14 @@
 Shader "Custom/VertexColor" {
 	Properties{
 		point_size("Point Size", Float) = 5.0
+		alpha_value("Alpha", Float) = 1.0
 	}
     SubShader {
+		Tags{ "RenderType" = "Transparent" "Queue" = "Transparent" }
     Pass {
         LOD 200
         Cull Off
+		Blend SrcAlpha OneMinusSrcAlpha
                  
         CGPROGRAM
         #pragma vertex vert
@@ -25,13 +28,15 @@ Shader "Custom/VertexColor" {
         };
          
 
-		 float point_size;
+		float point_size;
+		float alpha_value;
 
         VertexOutput vert(VertexInput v) {
          
             VertexOutput o;
             o.pos = UnityObjectToClipPos(v.v);
             o.col = v.color;
+			o.col.w = alpha_value;
             o.size = point_size;
             return o;
         }
