@@ -110,5 +110,10 @@ public class ChangeMyColor : MonoBehaviour {
         low = _low;
 
         usable = true;
+
+        // Change colors in the shell as well
+        
     }
+
+    
 }

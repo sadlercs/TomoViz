@@ -31,8 +31,8 @@ public class Manager : MonoBehaviour
     public Texture2D colorMap;
     public Texture2D heightColorMap;
     public Color[] gradient;
-    private float min = -3f;
-    private float max = 3f;
+    private float min = -5f;
+    private float max = 5f;
 
     
     public GameObject longitude_slider;
@@ -42,7 +42,6 @@ public class Manager : MonoBehaviour
     public Slider elevationScale_slider;
     public Slider elevationScaleAlpha_slider;
     public Toggle snap_toggle;
-    public Toggle contour_toggle;
     public Toggle showVolume_toggle;
     public Toggle showShell_toggle;
     public GameObject VoxelMeshScrollView;
@@ -77,7 +76,6 @@ public class Manager : MonoBehaviour
     public GameObject colorProfilePrefab;
     private bool intGradient;
     private bool bBox;
-    public bool contourEnabled;
     private bool shading;
     private bool showingTopography;
     private Mesh mesh;
@@ -123,7 +121,7 @@ public class Manager : MonoBehaviour
 
         // Setup a default clamped color list from the color profile
         colorList = new List<GameObject>();
-        float[] clampValues = new float[] { -3f, -2, -1, 0, 1, 2, 3 };
+        float[] clampValues = new float[] { -5f, -4f, -3f, -2f, -1f, 0f, 1f, 2f, 3f, 4f, 5f };
         for (int i = 0; i < clampValues.Length - 1; ++i)
         {
             GameObject cp = Instantiate(colorProfilePrefab, ColorMaterialContents);
@@ -153,15 +151,9 @@ public class Manager : MonoBehaviour
     private static float Contour(ref float low, ref float high, ref float val)
     {
         float rVal = Mathf.Round(val);
-        return (rVal < low) ? low : (rVal > high) ? high : rVal;
+        return (rVal <= low) ? low : (rVal >= high) ? high : rVal;
     }
 
-    // In the gradient option, we can see finer details in the volume shell
-    // This is not used for voxelization
-    private static float Gradient(ref float low, ref float high, ref float val)
-    {
-        return (val < low) ? low : (val > high) ? high : val;
-    }
 
     // A public function used for the UI to turn on/off topography view
     public void ShowTopography()
@@ -300,19 +292,15 @@ public class Manager : MonoBehaviour
         }
     }
 
+
+    public void ForceReshade()
+    {
+        StartCoroutine(Reshade(false));
+    }
     // Reshade the color sets for contour or gradient
     public IEnumerator Reshade(bool VOX)
     {
-        DelVal Shading;
-        if (contourEnabled)
-        {
-            Shading = Contour;
-        }
-        else
-        {
-            Shading = Gradient;
-        }
-
+       
         if (shading == true) { shading = true; yield break; };
 
 
@@ -383,7 +371,17 @@ public class Manager : MonoBehaviour
                 {
                     for (int k = 1; k < lat; ++k)
                     {
-                        points[i, j, k].color = gradient[(int)((Shading(ref min, ref maxmin1, ref points[i, j, k].value) + (float)max) * range)];
+                        float v = points[i, j, k].value;
+                        for (int t = 0; t < colorList.Count; ++t)
+                        {
+                            if (colorList[t].GetComponent<ChangeMyColor>().CanUse(v))
+                            {
+                                points[i, j, k].color = colorList[t].GetComponent<ChangeMyColor>().color;
+                                t = colorList.Count; // safe break
+                            }
+                        }
+                        
+                       // points[i, j, k].color = gradient[(int)((Contour(ref min, ref maxmin1, ref points[i, j, k].value) + (float)max) * range)];
                     }
                 }
             }
@@ -394,14 +392,7 @@ public class Manager : MonoBehaviour
         yield return RebuildMesh();
 
     }
-
-    // A public function used for the UI to switch from contour/gradient view
-    public void SetContour()
-    {
-        contourEnabled = !contourEnabled;
-
-        StartCoroutine(Reshade(false));
-    }
+    
 
     // This is the primary input function where data is parsed in from the data file
     // and assigned to needed data structures. We should cut this up into smaller 
@@ -638,6 +629,7 @@ public class Manager : MonoBehaviour
 
 
 
+
         //Top
         for (int i = 1; i < lon; ++i)
         {
@@ -762,6 +754,11 @@ public class Manager : MonoBehaviour
 
         #region BoundingBox
 
+        // Rebuild This following the 12 edges of the bounds
+        // Make each edge it's own line
+
+
+        /*
         float xh = lonSet * 0.5f;
         float mxh = -xh; --xh;
         float yh = elevSet * 0.5f;
@@ -789,10 +786,11 @@ public class Manager : MonoBehaviour
         lr = meshObj[9].GetComponent<LineRenderer>();
         lr.positionCount = 2;
         lr.SetPositions(new Vector3[] { new Vector3(xh, myh, zh), new Vector3(xh, yh, zh) });
+        */
 
         #endregion BoundingBox
 
-        // End Create bounding box
+        
 
         SnapToBB();
 
