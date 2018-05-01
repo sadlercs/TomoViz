@@ -361,7 +361,7 @@ public class MarchingCube
     private static int _Polygonise(int x, int y, int z, LookupFunc lookupFunc, List<Vector3> vertices, Vector3 offset, byte isoVal = 0)
     {
         var triTable = MarchingCubeLookupTable.triTable;
-        var vertTable = MarchingCubeLookupTable.edgeTable;
+        //var vertTable = MarchingCubeLookupTable.edgeTable;
         var pointTable = MarchingCubeLookupTable.pointTable;
         var edgeMaskTable = MarchingCubeLookupTable.edgeMaskTable;
 

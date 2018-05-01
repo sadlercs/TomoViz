@@ -46,7 +46,8 @@ public class ChangeMyColor : MonoBehaviour {
 
     public bool CanUse(float t)
     {
-        return (t >= low && t < high && usable == true) ? true : false;
+        
+        return (t >= low && t <= high && usable) ? true : false;
     }
 
     public void SetRange()

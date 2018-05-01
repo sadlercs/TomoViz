@@ -13,8 +13,8 @@ public class DragMouseOrbit : MonoBehaviour
     public float xSpeed = 120.0f, ySpeed = 120.0f;
     public float distanceMin = 5f, distanceMax = 100000f;
     public float smoothTime = 2f;
-    private float moveGap = 0.2f;
-    private float offsety = 5f;
+    //private float moveGap = 0.2f;
+    //private float offsety = 5f;
     public bool moving;
     private float distSpeed = 1f;
     private float rotationYAxis = 0.0f, rotationXAxis = 0.0f;

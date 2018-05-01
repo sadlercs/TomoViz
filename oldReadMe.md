@@ -23,6 +23,27 @@ for b=1:size(Q)
   fprintf(fid, '%d\n', Q(b));
 end
 
+lat = srElevation.LAT
+Q = lat(:)
+b=size(lat,1) * size(lat,2)
+
+fprintf(fid, '%d %d\n', [size(lat, 1), size(lat, 2)]);
+
+for b=1:size(Q)
+  fprintf(fid, '%d\n', Q(b));
+end
+
+
+lon =srElevation.LON
+Q = lon(:)
+b=size(lon,1) * size(lon,2)
+
+fprintf(fid, '%d %d\n', [size(lon, 1), size(lon, 2)]);
+
+for b=1:size(Q)
+  fprintf(fid, '%d\n', Q(b));
+end
+
 
 elev = srElevation.data;
 
