@@ -91,11 +91,9 @@ public class Manager : MonoBehaviour
     public bool colorChangeLock = false;
     public static Manager instance = null;
 
-
-    //private bool useHeightColorMap;
-    private const float EARTHRADIUS = 6371f; // in km
-    private const float scaleLON = (360f / 360.0f);
-    private const float scaleLAT = (360f / 180.0f);
+    
+    private const float scaleLON = 1f;
+    private const float scaleLAT = 2f;
 
     // Use this for initialization
     void Start()
@@ -214,28 +212,23 @@ public class Manager : MonoBehaviour
     public void SnapToBB()
     {
 
-        lonLatView = true;
-        Vector3 newPos;
-
-        // Debug.Log("scaleLON * lonRange.x: " + scaleLON * lonRange.x * scale + ", scaleLON * lonRange.y: " + scaleLON * lonRange.y * scale);
-
-        if (lonLatView)
-        {
-
-            newPos = (snap_toggle.isOn) ? new Vector3(lonRange.y * 0.5f * scale, elevSet * .5f, (-scaleLAT * latRange.x - (scaleLAT * latRange.y - scaleLAT * latRange.x) * 0.5f) * scale) :
+        /*
+        Vector3 newPos = (snap_toggle.isOn) ? new Vector3(lonRange.y * 0.5f * scale, elevSet * .5f, (-scaleLAT * latRange.x - (scaleLAT * latRange.y - scaleLAT * latRange.x) * 0.5f) * scale) :
                                           new Vector3(-(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale);
+                                          */
 
-            /*
-            newPos = (snap_toggle.isOn) ? new Vector3((-scaleLON * lonRange.x + (scaleLON * lonRange.y - scaleLON * lonRange.x) * 0.5f) * scale  , elevSet * .5f, (-scaleLAT * latRange.x - (scaleLAT * latRange.y - scaleLAT * latRange.x) * 0.5f) * scale) :
+        
+
+
+        Vector3 newPos = new Vector3(
+                                -(((lonRange.y - lonRange.x) * 0.5f) + lonRange.x) * 10f, 
+                                elevSet * .5f, 
+                                -(((latRange.y - latRange.x) * 0.5f) + latRange.x) * 10f * 2f
+                                    );
+        
+        /* (snap_toggle.isOn) ? new Vector3(-lonRange.y * scale, elevSet * .5f, (-scaleLAT * latRange.x - (scaleLAT * latRange.y - scaleLAT * latRange.x) * 0.5f) * scale) :
                                           new Vector3(-(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale);
-            */
-        }
-        else
-        {
-            newPos = (snap_toggle.isOn) ? new Vector3(-(latSet - 1) * .5f, (elevSet - 1) * .5f, -(lonSet - 1) * .5f) :
-                                          new Vector3(-(latSetBounds.x + (latSetBounds.y - latSetBounds.x) * .5f), (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(lonSetBounds.x + (lonSetBounds.y - lonSetBounds.x) * .5f));
-
-        }
+                                          */
 
         this.transform.localPosition = newPos;
         for (int i = 0; i < 6; ++i)
@@ -243,24 +236,18 @@ public class Manager : MonoBehaviour
             meshObj[i].transform.localPosition = newPos;
         }
 
-        // Debug.Log("topoEleRange: " + topoEleRange.ToString());
+        //Debug.Log("topoLonRange: " + topoLonRange.ToString());
+        //Debug.Log("topoLatRange: " + topoLatRange.ToString());
+
+        newPos = new Vector3(
+                                -(((topoLonRange.y - topoLonRange.x) * 0.5f) + topoLonRange.x) * 10f,
+                                1,
+                                -(((topoLatRange.y - topoLatRange.x) * 0.5f) + topoLatRange.x) * 10f * 2f
+                                    );
+
         float elevationOffset = ((topoEleRange.y - topoEleRange.x) * 0.5f) * elevationScale + meshObj[0].transform.localPosition.y;
         topography.transform.localPosition = new Vector3(newPos.x, elevationOffset + 5f, newPos.z);
 
-        /*(snap_toggle.isOn) ? new Vector3((-topoLatRange.x - (topoLatRange.y - topoLatRange.x) * 0.5f) * scale, elevSet * .5f, (-topoLonRange.x - (topoLonRange.y - topoLonRange.x) * 0.5f) * scale) :
-                                          new Vector3(-(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale);
-                                          */
-        //topography.transform.localPosition = new Vector3(-(topoLonRange.x * scale) + newPos.x - Mathf.Abs(topoLonRange.x - latRange.x) * scale, elevSet + (topoEleRange.y - topoEleRange.x) * 0.001f - newPos.y, -(topoLatRange.x * scale) + newPos.z - Mathf.Abs(topoLatRange.x - lonRange.x) * scale);
-
-        /*
-        if (voxelSet != null)
-        {
-            for (int i = 0; i < voxelSet.Count; ++i)
-            {
-                voxelSet[i].transform.localPosition = newPos;
-            }
-        }
-        */
     }
 
     // A public function used for the UI to turn on/off shell view
@@ -421,6 +408,9 @@ public class Manager : MonoBehaviour
 
         lonRange = new Vector2(float.MaxValue, float.MinValue);
         latRange = new Vector2(float.MaxValue, float.MinValue);
+        topoLonRange = new Vector2(float.MaxValue, float.MinValue);
+        topoLatRange = new Vector2(float.MaxValue, float.MinValue);
+
         topoEleRange = new Vector2(float.MaxValue, float.MinValue);
         int y;
         int x;
@@ -458,9 +448,9 @@ public class Manager : MonoBehaviour
             for (int i = 0; i < x; ++i)
             {
                 float val = Convert.ToSingle(inp_stm.ReadLine());
+                topoLatlong[i, j].y = val * 2f;
 
                 // convert LAT coordinates to mappable range N/W
-                topoLatlong[i, j].y = scaleLAT * (90f - val);
                 if (val < topoLatRange.x) topoLatRange.x = val; else if (val > topoLatRange.y) topoLatRange.y = val;
             }
         }
@@ -472,8 +462,7 @@ public class Manager : MonoBehaviour
 
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
-
-        //Debug.Log("Velocity Longitude dimensions: " + inp_ln);
+        
         if (dimens.Count != 2)
         {
             Debug.LogError("Longitude dimensions are not correct: " + dimens.Count);
@@ -494,9 +483,8 @@ public class Manager : MonoBehaviour
             for (int i = 0; i < x; ++i)
             {
                 float val = Convert.ToSingle(inp_stm.ReadLine());
-
+                topoLatlong[i, j].x = val;
                 // convert LON coordinates to mappable range E/W
-                topoLatlong[i, j].x = scaleLON * (180f + val);
                 if (val < topoLonRange.x) topoLonRange.x = val; else if (val > topoLonRange.y) topoLonRange.y = val;
 
             }
@@ -512,7 +500,7 @@ public class Manager : MonoBehaviour
 
         topoPoints = new Vector3[x,y];
 
-        for (int j = y - 1; j >= 0; --j)
+        for (int j = 0; j < y; ++j)
         {
             for (int i = 0; i < x; ++i)
             {
@@ -553,9 +541,8 @@ public class Manager : MonoBehaviour
             for (int i = 0; i < x; ++i)
             {
                 float val = Convert.ToSingle(inp_stm.ReadLine());
-
+                latlong[i, j].y = val * 2f;
                 // convert LAT coordinates to mappable range N/W
-                latlong[i, j].y = scaleLAT * (90f - val);
                 if (val < latRange.x) latRange.x = val; else if (val > latRange.y) latRange.y = val;
             }
         }
@@ -565,8 +552,7 @@ public class Manager : MonoBehaviour
 
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
-
-        //Debug.Log("Velocity Longitude dimensions: " + inp_ln);
+        
         if (dimens.Count != 2)
         {
             Debug.LogError("Longitude dimensions are not correct: " + dimens.Count);
@@ -587,9 +573,8 @@ public class Manager : MonoBehaviour
             for (int i = 0; i < x; ++i)
             {
                 float val = Convert.ToSingle(inp_stm.ReadLine());
-
+                latlong[i, j].x = val;
                 // convert LON coordinates to mappable range E/W
-                latlong[i, j].x = scaleLON * (180f + val);
                 if (val < lonRange.x) lonRange.x = val; else if (val > lonRange.y) lonRange.y = val;
 
             }
@@ -646,7 +631,7 @@ public class Manager : MonoBehaviour
         {
             float e = -i * 0.5f;
            
-            for (int j = latSet; j > 0; --j)
+            for (int j = 0; j < latSet; ++j)
             {
                 int jm1 = j - 1;
 
@@ -920,8 +905,7 @@ public class Manager : MonoBehaviour
                 for (int d = dMin; d <= dMax; d++, i++)
                 {
                     Vector3 p = topoPoints[w, d];
-
-                    // colors[i] = Color.white;
+                    
 
                     int cVal =(int)( (p.y - minElevation) * colorDivisor);
 
@@ -934,9 +918,7 @@ public class Manager : MonoBehaviour
 
                 }
             }
-
-            //Debug.Log("maxEle: " + maxEle + "      ColorIndex: " + ((int)((maxEle - minElevation) * colorDivisor)));
-
+            
             Mesh tMesh = new Mesh
             {
                 indexFormat = UnityEngine.Rendering.IndexFormat.UInt32,
