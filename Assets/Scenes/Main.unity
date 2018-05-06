@@ -2001,7 +2001,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &258241978
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2262,6 +2262,11 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &319973319 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1934713006185644, guid: abeaa1f1f59248b4babc86b4b3272cd5,
+    type: 2}
+  m_PrefabInternal: {fileID: 1492382744}
 --- !u!1 &379608493
 GameObject:
   m_ObjectHideFlags: 0
@@ -6443,9 +6448,9 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1379107087}
---- !u!4 &1391997220 stripped
-Transform:
-  m_PrefabParentObject: {fileID: 4629668589355196, guid: abeaa1f1f59248b4babc86b4b3272cd5,
+--- !u!1 &1396867953 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1524492262512170, guid: abeaa1f1f59248b4babc86b4b3272cd5,
     type: 2}
   m_PrefabInternal: {fileID: 1492382744}
 --- !u!1 &1404881497
@@ -8056,6 +8061,18 @@ Prefab:
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 4140084023786424, guid: abeaa1f1f59248b4babc86b4b3272cd5, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4140084023786424, guid: abeaa1f1f59248b4babc86b4b3272cd5, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934713006185644, guid: abeaa1f1f59248b4babc86b4b3272cd5, type: 2}
+      propertyPath: m_Name
+      value: VoxelSets
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: abeaa1f1f59248b4babc86b4b3272cd5, type: 2}
   m_IsPrefabParent: 0
@@ -8703,7 +8720,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -230}
+  m_AnchoredPosition: {x: 0, y: -238.03}
   m_SizeDelta: {x: -30, y: 20}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1659098440
@@ -9476,7 +9493,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2d9f11b8a53d3541a7e29bb8d4f49d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 1391997220}
+  target: {fileID: 1962227428}
   xSpeed: 0.1
   ySpeed: 50
   distanceMin: 5
@@ -10067,6 +10084,11 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!4 &1962227428 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 4140084023786424, guid: abeaa1f1f59248b4babc86b4b3272cd5,
+    type: 2}
+  m_PrefabInternal: {fileID: 1492382744}
 --- !u!1 &1994790420
 GameObject:
   m_ObjectHideFlags: 0
@@ -10284,7 +10306,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 449405960}
   m_Direction: 0
   m_MinValue: 0.001
-  m_MaxValue: 0.005
+  m_MaxValue: 0.0025
   m_WholeNumbers: 0
   m_Value: 0.001
   m_OnValueChanged:
@@ -10315,7 +10337,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc5e2a35baccea342b3275854826e6b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vMesh: {fileID: 0}
+  vMesh: {fileID: 319973319}
   colorMap: {fileID: 2800000, guid: 4dab3cada9247c945905ea441b4156b0, type: 3}
   heightColorMap: {fileID: 2800000, guid: 9cc31e092dfa51e479035a92069c9709, type: 3}
   gradient:
@@ -10351,6 +10373,7 @@ MonoBehaviour:
   latitude_slider: {fileID: 563901553}
   elevation_slider: {fileID: 2096854543}
   voxelize_button: {fileID: 1863074848}
+  focalPoint: {fileID: 1396867953}
   elevationScale_slider: {fileID: 2030340056}
   elevationScaleAlpha_slider: {fileID: 1659098440}
   snap_toggle: {fileID: 2093836769}
@@ -10616,7 +10639,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2093836768
 RectTransform:
   m_ObjectHideFlags: 0

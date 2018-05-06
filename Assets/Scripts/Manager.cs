@@ -39,6 +39,7 @@ public class Manager : MonoBehaviour
     public GameObject latitude_slider;
     public GameObject elevation_slider;
     public GameObject voxelize_button;
+    public GameObject focalPoint;
     public Slider elevationScale_slider;
     public Slider elevationScaleAlpha_slider;
     public Toggle snap_toggle;
@@ -225,28 +226,35 @@ public class Manager : MonoBehaviour
                                 elevSet * .5f, 
                                 -(((latRange.y - latRange.x) * 0.5f) + latRange.x) * 10f * 2f
                                     );
-        
+
         /* (snap_toggle.isOn) ? new Vector3(-lonRange.y * scale, elevSet * .5f, (-scaleLAT * latRange.x - (scaleLAT * latRange.y - scaleLAT * latRange.x) * 0.5f) * scale) :
                                           new Vector3(-(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale);
                                           */
 
-        this.transform.localPosition = newPos;
+        focalPoint.transform.localPosition = newPos;
+
+        /*
         for (int i = 0; i < 6; ++i)
         {
             meshObj[i].transform.localPosition = newPos;
         }
 
-        //Debug.Log("topoLonRange: " + topoLonRange.ToString());
-        //Debug.Log("topoLatRange: " + topoLatRange.ToString());
-
+        
         newPos = new Vector3(
                                 -(((topoLonRange.y - topoLonRange.x) * 0.5f) + topoLonRange.x) * 10f,
                                 1,
                                 -(((topoLatRange.y - topoLatRange.x) * 0.5f) + topoLatRange.x) * 10f * 2f
                                     );
+        */
 
         float elevationOffset = ((topoEleRange.y - topoEleRange.x) * 0.5f) * elevationScale + meshObj[0].transform.localPosition.y;
-        topography.transform.localPosition = new Vector3(newPos.x, elevationOffset + 5f, newPos.z);
+
+        topography.transform.localPosition = new Vector3(topography.transform.localPosition.x,
+            elevationOffset + 0f,
+            topography.transform.localPosition.z);
+        //topography.transform.localPosition = new Vector3(newPos.x, elevationOffset + 5f, newPos.z);
+
+        //focalPoint
 
     }
 
@@ -1389,6 +1397,8 @@ public class Manager : MonoBehaviour
             m.color = c;
             go.GetComponent<MeshRenderer>().material = m;
             voxelSet.Add(go);
+            go.transform.parent = vMesh.transform;
+            go.transform.localPosition = Vector3.zero;
         }
 
         yield return null;
