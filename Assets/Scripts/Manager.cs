@@ -34,7 +34,7 @@ public class Manager : MonoBehaviour
     private float min = -3f;
     private float max = 3f;
 
-    
+
     public GameObject longitude_slider;
     public GameObject latitude_slider;
     public GameObject elevation_slider;
@@ -92,7 +92,7 @@ public class Manager : MonoBehaviour
     public bool colorChangeLock = false;
     public static Manager instance = null;
 
-    
+
     private const float scaleLON = 1f;
     private const float scaleLAT = 2f;
 
@@ -115,12 +115,12 @@ public class Manager : MonoBehaviour
         // Create a default color profile
         gradient = colorMap.GetPixels();
 
-        float range = (float)(gradient.Length-1) / (max - min);
+        float range = (float)(gradient.Length - 1) / (max - min);
         //float maxmin1 = max - 1f;
 
         // Setup a default clamped color list from the color profile
         colorList = new List<GameObject>();
-        float[] clampValues = new float[] {-3f, -2f, -1f, 0f, 1f, 2f, 3f};
+        float[] clampValues = new float[] { -3f, -2f, -1f, 0f, 1f, 2f, 3f };
         for (int i = 0; i < clampValues.Length - 1; ++i)
         {
             GameObject cp = Instantiate(colorProfilePrefab, ColorMaterialContents);
@@ -193,7 +193,7 @@ public class Manager : MonoBehaviour
 
         float alphaVal = elevationScaleAlpha_slider.value;
         topography.GetComponent<MeshRenderer>().material.SetFloat("alpha_value", alphaVal);
-        
+
         yield return null;
 
     }
@@ -218,12 +218,12 @@ public class Manager : MonoBehaviour
                                           new Vector3(-(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale);
                                           */
 
-        
+
 
 
         Vector3 newPos = new Vector3(
-                                -(((lonRange.y - lonRange.x) * 0.5f) + lonRange.x) * 10f, 
-                                elevSet * .5f, 
+                                -(((lonRange.y - lonRange.x) * 0.5f) + lonRange.x) * 10f,
+                                elevSet * .5f,
                                 -(((latRange.y - latRange.x) * 0.5f) + latRange.x) * 10f * 2f
                                     );
 
@@ -295,7 +295,7 @@ public class Manager : MonoBehaviour
     // Reshade the color sets for contour or gradient
     public IEnumerator Reshade(bool VOX)
     {
-       
+
         if (shading == true) { shading = true; yield break; };
 
 
@@ -305,7 +305,7 @@ public class Manager : MonoBehaviour
         int lat = latSet - 1;
         int ele = elevSet - 1;
         int lon = lonSet - 1;
-        
+
         // Make sure the mins and max values are set correctly after value changes
 
         int colorListLength = colorList.Count;
@@ -348,7 +348,7 @@ public class Manager : MonoBehaviour
                     }
                 }
             }
-            
+
             //Correct shading to clamped areas
 
             for (int i = iS; i < iE; ++i)
@@ -390,7 +390,7 @@ public class Manager : MonoBehaviour
                                 t = colorListLength; // safe break
                             }
                         }
-                        if(t == colorListLength)
+                        if (t == colorListLength)
                         {
                             Debug.Log("v: " + v);
                             points[i, j, k].color = Color.grey;
@@ -400,12 +400,12 @@ public class Manager : MonoBehaviour
                 }
             }
         }
-        
+
         shading = false;
         yield return RebuildMesh();
 
     }
-    
+
 
     // This is the primary input function where data is parsed in from the data file
     // and assigned to needed data structures. We should cut this up into smaller 
@@ -426,7 +426,7 @@ public class Manager : MonoBehaviour
         topologyBuilt = false;
         StreamReader inp_stm = new StreamReader(Application.dataPath + "/Resources/" + fileName);
         string inp_ln;
-        
+
         // Get Topography latitude
 
         List<string> dimens;
@@ -434,7 +434,8 @@ public class Manager : MonoBehaviour
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
 
-       
+        
+
         if (dimens.Count != 2)
         {
             Debug.LogError("Latitude dimensions are not correct: " + dimens.Count);
@@ -447,7 +448,10 @@ public class Manager : MonoBehaviour
 
         x = Convert.ToInt32(dimens[0]);
         y = Convert.ToInt32(dimens[1]);
-        topoDimens = new Vector2(x,y);
+        topoDimens = new Vector2(x, y);
+
+        Debug.Log("Topography Latitude dimensions are: " + topoDimens.ToString());
+
         Vector2[,] topoLatlong = new Vector2[x, y];
 
 
@@ -470,7 +474,7 @@ public class Manager : MonoBehaviour
 
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
-        
+
         if (dimens.Count != 2)
         {
             Debug.LogError("Longitude dimensions are not correct: " + dimens.Count);
@@ -485,6 +489,7 @@ public class Manager : MonoBehaviour
         x = Convert.ToInt32(dimens[0]);
         y = Convert.ToInt32(dimens[1]);
 
+        Debug.Log("Topography Longitude dimensions are: " + topoDimens.ToString());
 
         for (int j = 0; j < y; ++j)
         {
@@ -498,15 +503,14 @@ public class Manager : MonoBehaviour
             }
         }
 
-
-
+        // Get elevation Data
 
         inp_ln = inp_stm.ReadLine();
-
+        
         List<string> elevationData = new List<string>(inp_ln.Split(' '));
         if (!(Convert.ToInt32(elevationData[0]) == x) || !(Convert.ToInt32(elevationData[1]) == y)) Debug.Log("error in topoSize");
 
-        topoPoints = new Vector3[x,y];
+        topoPoints = new Vector3[x, y];
 
         for (int j = 0; j < y; ++j)
         {
@@ -540,7 +544,8 @@ public class Manager : MonoBehaviour
         y = Convert.ToInt32(dimens[1]);
         latlong = new Vector2[x, y];
 
-     
+        Debug.Log("latLong dimensions are: " + latlong.ToString());
+
 
         // MatLab is column major order -> z,y,x
 
@@ -560,7 +565,7 @@ public class Manager : MonoBehaviour
 
         inp_ln = inp_stm.ReadLine();
         dimens = new List<string>(inp_ln.Split(' '));
-        
+
         if (dimens.Count != 2)
         {
             Debug.LogError("Longitude dimensions are not correct: " + dimens.Count);
@@ -589,6 +594,25 @@ public class Manager : MonoBehaviour
         }
 
 
+
+        // Get volume depth data points
+
+        inp_ln = inp_stm.ReadLine();
+        dimens = new List<string>(inp_ln.Split(' '));
+
+        List<float> depthValues = new List<float>();
+
+        int dx = Convert.ToInt32(dimens[0]);
+        int dy = Convert.ToInt32(dimens[1]);
+
+        for(int i = 0; i < dx; ++i)
+        {
+            for (int j = 0; j < dy; j++)
+            {
+                depthValues.Add(Convert.ToSingle(inp_stm.ReadLine()) / scale);
+            }
+        }
+        
 
         // Get Velocity data
 
@@ -623,7 +647,7 @@ public class Manager : MonoBehaviour
         elevSet = dim[2] + 2;
 
         points = new Point[lonSet, elevSet, latSet];
-       
+
         // MatLab is column major order -> z,y,x
 
         int ele = elevSet - 1;
@@ -634,11 +658,12 @@ public class Manager : MonoBehaviour
         int lat2 = lat - 1;
 
 
-
+        Debug.Log("elevSet: " + elevSet + "    depthValues: " + depthValues.Count);
+        int depthCounter = 0;
         for (int i = 0; i < elevSet; ++i)
         {
-            float e = -i * 0.5f;
            
+
             for (int j = 0; j < latSet; ++j)
             {
                 int jm1 = j - 1;
@@ -646,11 +671,11 @@ public class Manager : MonoBehaviour
                 for (int k = 0; k < lonSet; ++k)
                 {
                     int km1 = k - 1;
-                 
+
                     if (i > 0 && i < ele && j > 0 && j < lat && k > 0 && k < lon) // make space for the shell
                     {
                         Point tp = new Point();
-                        tp.position = new Vector3(latlong[km1, jm1].x, e, latlong[km1, jm1].y);
+                        tp.position = new Vector3(latlong[km1, jm1].x, depthValues[i-1], latlong[km1, jm1].y);
                         tp.value = Convert.ToSingle(inp_stm.ReadLine());
                         points[k, i, j] = tp;
                     }
@@ -828,7 +853,7 @@ public class Manager : MonoBehaviour
 
         #endregion BoundingBox
 
-        
+
 
         SnapToBB();
 
@@ -895,17 +920,17 @@ public class Manager : MonoBehaviour
             Color[] colors = new Color[size];
 
 
-            
+
             Color[] colorHeight = heightColorMap.GetPixels();
             int colorHeightWidth = colorHeight.Length - 1;
             float maxElevation = 6000f; ;
-            float minElevation  = -6000f;
+            float minElevation = -6000f;
             float difference = (maxElevation - minElevation);
 
 
             float colorDivisor = ((float)colorHeightWidth) / difference;
 
-            
+
 
             float maxEle = 0;
             for (i = 0, w = wMin; w <= wMax; w++)
@@ -913,20 +938,20 @@ public class Manager : MonoBehaviour
                 for (int d = dMin; d <= dMax; d++, i++)
                 {
                     Vector3 p = topoPoints[w, d];
-                    
 
-                    int cVal =(int)( (p.y - minElevation) * colorDivisor);
 
-                    if (p.y > maxEle) maxEle = p.y; 
+                    int cVal = (int)((p.y - minElevation) * colorDivisor);
+
+                    if (p.y > maxEle) maxEle = p.y;
                     // assign the color val index but clamp it to max or min if outside range
                     // from maxElevation and minElevation variables
-                    colors[i] = colorHeight[(cVal<=0)?0:(cVal>=colorHeightWidth)? colorHeightWidth: cVal];
+                    colors[i] = colorHeight[(cVal <= 0) ? 0 : (cVal >= colorHeightWidth) ? colorHeightWidth : cVal];
 
                     vertices[i] = new Vector3(p.x * scale, p.y, p.z * scale);
 
                 }
             }
-            
+
             Mesh tMesh = new Mesh
             {
                 indexFormat = UnityEngine.Rendering.IndexFormat.UInt32,
@@ -1290,7 +1315,7 @@ public class Manager : MonoBehaviour
 
 
         Vector3 t = Vector3.zero;
-        
+
         int hm1 = elevSet - 1;
 
         int iS = lonSetBounds.x - 1;

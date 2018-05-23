@@ -1,6 +1,6 @@
 -# TomoViz
 Geo visualization using the Unity3D API
-Current version is created in Unity Beta 8.1.13
+Current version is created in Unity 2018.1
 
 Directions to export data sets from MatLab to Unity
 
@@ -10,18 +10,6 @@ Directions to export data sets from MatLab to Unity
 
 
 fid = fopen('x.dat', 'a+');
-
-
-header = srElevation.header
-
-Q = header(:)
-b=size(header,1) * size(header,2)
-
-fprintf(fid, '%d %d\n', [size(header, 1), size(header, 2)]);
-
-for b=1:size(Q)
-  fprintf(fid, '%d\n', Q(b));
-end
 
 lat = srElevation.LAT
 Q = lat(:)
@@ -78,6 +66,17 @@ for b=1:size(Q)
   fprintf(fid, '%d\n', Q(b));
 end
 
+
+volDepth = srModel.zg
+
+Q = volDepth(:)
+b=size(volDepth,1) * size(volDepth,2)
+
+fprintf(fid, '%d %d\n', [size(volDepth, 1), size(volDepth, 2)]);
+
+for b=1:size(Q)
+  fprintf(fid, '%d\n', Q(b));
+end
 
 data = srModel.vel_pert;
 Q = data(:)
