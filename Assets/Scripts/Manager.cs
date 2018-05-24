@@ -247,10 +247,18 @@ public class Manager : MonoBehaviour
                                     );
         */
 
-        float elevationOffset = ((topoEleRange.y - topoEleRange.x) * 0.5f) * elevationScale + meshObj[0].transform.localPosition.y;
+        float elevationOffset = 0f;
 
+        if (topography.GetComponent<MeshFilter>().mesh != null)
+        {
+            topography.GetComponent<MeshFilter>().mesh.RecalculateBounds();
+           
+            elevationOffset = Mathf.Abs(topography.GetComponent<MeshFilter>().mesh.bounds.min.y) * elevationScale;
+        }
+
+        
         topography.transform.localPosition = new Vector3(topography.transform.localPosition.x,
-            elevationOffset + 0f,
+            elevationOffset,
             topography.transform.localPosition.z);
         //topography.transform.localPosition = new Vector3(newPos.x, elevationOffset + 5f, newPos.z);
 
@@ -450,7 +458,7 @@ public class Manager : MonoBehaviour
         y = Convert.ToInt32(dimens[1]);
         topoDimens = new Vector2(x, y);
 
-        Debug.Log("Topography Latitude dimensions are: " + topoDimens.ToString());
+        //Debug.Log("Topography Latitude dimensions are: " + topoDimens.ToString());
 
         Vector2[,] topoLatlong = new Vector2[x, y];
 
@@ -489,7 +497,7 @@ public class Manager : MonoBehaviour
         x = Convert.ToInt32(dimens[0]);
         y = Convert.ToInt32(dimens[1]);
 
-        Debug.Log("Topography Longitude dimensions are: " + topoDimens.ToString());
+        //Debug.Log("Topography Longitude dimensions are: " + topoDimens.ToString());
 
         for (int j = 0; j < y; ++j)
         {
@@ -544,7 +552,7 @@ public class Manager : MonoBehaviour
         y = Convert.ToInt32(dimens[1]);
         latlong = new Vector2[x, y];
 
-        Debug.Log("latLong dimensions are: " + latlong.ToString());
+
 
 
         // MatLab is column major order -> z,y,x
@@ -657,12 +665,9 @@ public class Manager : MonoBehaviour
         int lat = latSet - 1;
         int lat2 = lat - 1;
 
-
-        Debug.Log("elevSet: " + elevSet + "    depthValues: " + depthValues.Count);
-        int depthCounter = 0;
+        
         for (int i = 0; i < elevSet; ++i)
         {
-           
 
             for (int j = 0; j < latSet; ++j)
             {
@@ -892,8 +897,7 @@ public class Manager : MonoBehaviour
     {
 
         // Set the current elevation scale to the slider value
-        float elevationScale = elevationScale_slider.value;
-
+        elevationScale = elevationScale_slider.value;
 
 
         // If the topography topology has not been 
@@ -1270,17 +1274,19 @@ public class Manager : MonoBehaviour
 
         for (int i = 0; i < colorList.Count; ++i)
         {
+            
             StartCoroutine(Voxelize(colorList[i].GetComponent<ChangeMyColor>().color));
         }
 
         // This is a small hack that needs to be addressed
         // Changing to the Unity job system should eliminate
         // the need for this
+        
         while (voxelSet.Count < colorList.Count)
         {
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(2f);
         }
-
+        
 
         // Reset the loading UI to let the user know how long 
         // this process will take.
