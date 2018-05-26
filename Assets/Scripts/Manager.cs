@@ -1274,7 +1274,6 @@ public class Manager : MonoBehaviour
 
         for (int i = 0; i < colorList.Count; ++i)
         {
-            
             StartCoroutine(Voxelize(colorList[i].GetComponent<ChangeMyColor>().color));
         }
 
@@ -1284,9 +1283,9 @@ public class Manager : MonoBehaviour
         
         while (voxelSet.Count < colorList.Count)
         {
-            yield return new WaitForSeconds(2f);
+            yield return null;
         }
-        
+
 
         // Reset the loading UI to let the user know how long 
         // this process will take.
@@ -1303,6 +1302,9 @@ public class Manager : MonoBehaviour
         {
             GameObject go = Instantiate(VoxelViewPrefab, VoxelContentPanel.transform);
             go.GetComponent<VoxelToggle>().SetData(voxelSet[i], colorList[i].GetComponent<ChangeMyColor>().color, colorList[i].GetComponent<ChangeMyColor>().low.ToString() + "  -  " + colorList[i].GetComponent<ChangeMyColor>().high.ToString());
+
+            if (voxelSet[i].GetComponent<MeshRenderer>().material.color.a == 0.0f)
+                go.SetActive(false);
             VoxelViewSet.Add(go);
         }
     }
@@ -1405,7 +1407,7 @@ public class Manager : MonoBehaviour
         }
 
         // If we have vertices to create a voxel mesh then let's make the mesh
-        if (vertices.Count > 0)
+        //if (vertices.Count > 0)
         {
             Mesh tm = new Mesh
             {
@@ -1425,6 +1427,7 @@ public class Manager : MonoBehaviour
             go.AddComponent<MeshFilter>();
             go.GetComponent<MeshFilter>().mesh = tm;
             Color c = new Color(colorval.r, colorval.g, colorval.b, 0.5f);
+            if (vertices.Count == 0) c.a = 0.0f;
             m.color = c;
             go.GetComponent<MeshRenderer>().material = m;
             voxelSet.Add(go);
