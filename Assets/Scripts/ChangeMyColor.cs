@@ -52,69 +52,28 @@ public class ChangeMyColor : MonoBehaviour {
 
     public void SetRange()
     {
-        usable = false;
-        if (lowInput.text.Length == 0 || lowInput.text == String.Empty || highInput.text.Length == 0 || highInput.text == String.Empty) {
-            lowInput.text = low.ToString(); highInput.text = high.ToString(); return;
-        }
 
-        float _low = Convert.ToSingle(lowInput.text);
-        float _high = Convert.ToSingle(highInput.text);
+        float _low = low;
+        low = Convert.ToSingle(lowInput.text);
+        float _high = high;
+        high = Convert.ToSingle(highInput.text);
 
-        if (_low > _high)
+        usable = this.transform.parent.GetComponent<ValueSetter>().SetValues(this);
+
+        if (!usable)
         {
-            lowInput.text = low.ToString(); highInput.text = high.ToString(); return;
+            highInput.text = _high.ToString();
+            high = _high;
+            lowInput.text = _low.ToString();
+            low = _low;
         }
-       
-
-        int listCnt = Manager.instance.colorList.Count;
-
-        for (int i=0; i< listCnt; ++i)
-        {
-            if (Manager.instance.colorList[i] != this.gameObject && Manager.instance.colorList[i].GetComponent<ChangeMyColor>().usable == true)
-            {
-                float lowCheck = Manager.instance.colorList[i].GetComponent<ChangeMyColor>().low;
-                float highCheck = Manager.instance.colorList[i].GetComponent<ChangeMyColor>().high;
-                if (_low == lowCheck)
-                {
-                    lowInput.text = low.ToString(); return;
-                }
-                if (_low < lowCheck && high > lowCheck)
-                {
-                    lowInput.text = low.ToString(); return;
-                }
-                if (_low > lowCheck && _low < highCheck)
-                {
-                    lowInput.text = low.ToString(); return;
-                }
-
-                // Check High
-                if (_high == highCheck)
-                {
-                    highInput.text = high.ToString(); return;
-                }
-
-                if (_high > highCheck && _low < highCheck)
-                {
-                    highInput.text = high.ToString(); return;
-                }
-                if (_high < highCheck && _high > lowCheck)
-                {
-                    highInput.text = high.ToString(); return;
-                }
-            }
-        }
-        
-        
-        highInput.text = _high.ToString();
-        high = _high;
-        lowInput.text = _low.ToString();
-        low = _low;
-
-        usable = true;
-
-        // Change colors in the shell as well
         
     }
 
+    public void ResetValues()
+    {
+        highInput.text = high.ToString();
+        lowInput.text = low.ToString();
+    }
     
 }

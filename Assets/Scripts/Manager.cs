@@ -116,7 +116,6 @@ public class Manager : MonoBehaviour
         gradient = colorMap.GetPixels();
 
         float range = (float)(gradient.Length - 1) / (max - min);
-        //float maxmin1 = max - 1f;
 
         // Setup a default clamped color list from the color profile
         colorList = new List<GameObject>();
@@ -307,7 +306,6 @@ public class Manager : MonoBehaviour
         if (shading == true) { shading = true; yield break; };
 
 
-
         //Debug.Log("Vox Shading: " + VOX);
 
         int lat = latSet - 1;
@@ -317,7 +315,7 @@ public class Manager : MonoBehaviour
         // Make sure the mins and max values are set correctly after value changes
 
         int colorListLength = colorList.Count;
-
+        /*
         float newMin = float.MaxValue;
         float newMax = float.MinValue;
 
@@ -332,9 +330,7 @@ public class Manager : MonoBehaviour
 
         min = newMin;
         max = newMax;
-
-        //Debug.Log("min: " + min);
-        //Debug.Log("max: " + max);
+        */
 
         int iS = lonSetBounds.x;
         int iE = lonSetBounds.y;
@@ -358,14 +354,14 @@ public class Manager : MonoBehaviour
             }
 
             //Correct shading to clamped areas
-
             for (int i = iS; i < iE; ++i)
             {
                 for (int j = jS; j < jE; ++j)
                 {
                     for (int k = kS; k < kE; ++k)
                     {
-                        float v = Contour(ref min, ref max, ref points[i, j, k].value);
+                        //float v = Contour(ref min, ref max, ref points[i, j, k].value);
+                        float v = points[i, j, k].value;
                         for (int t = 0; t < colorListLength; ++t)
                         {
                             if (colorList[t].GetComponent<ChangeMyColor>().CanUse(v))
@@ -387,7 +383,8 @@ public class Manager : MonoBehaviour
                 {
                     for (int k = 1; k < lat; ++k)
                     {
-                        float v = Contour(ref min, ref max, ref points[i, j, k].value);
+                        //float v = Contour(ref min, ref max, ref points[i, j, k].value);
+                        float v = points[i, j, k].value;
 
                         int t = 0;
                         for (; t < colorListLength; ++t)
@@ -400,10 +397,10 @@ public class Manager : MonoBehaviour
                         }
                         if (t == colorListLength)
                         {
-                            Debug.Log("v: " + v);
-                            points[i, j, k].color = Color.grey;
+                            //Debug.Log("v: " + v);
+                            points[i, j, k].color = Color.clear;
                         }
-                        //points[i, j, k].color = gradient[(int)((Contour(ref min, ref max, ref points[i, j, k].value) + max) * range)];
+                       
                     }
                 }
             }
@@ -1276,11 +1273,12 @@ public class Manager : MonoBehaviour
         {
             StartCoroutine(Voxelize(colorList[i].GetComponent<ChangeMyColor>().color));
         }
+       
 
         // This is a small hack that needs to be addressed
         // Changing to the Unity job system should eliminate
         // the need for this
-        
+
         while (voxelSet.Count < colorList.Count)
         {
             yield return null;
