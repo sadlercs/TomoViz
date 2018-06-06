@@ -160,18 +160,12 @@ public class Manager : MonoBehaviour
     }
 
     // Get the longest side of the volume. Used for camera distance
-    public int GetLongestSide()
+    public float GetLongestSide()
     {
-        int longest = lonSetBounds.y;
-        if (latSetBounds.y > longest)
-        {
-            longest = latSetBounds.y;
-        }
-        if (elevSetBounds.y > longest)
-        {
-            longest = elevSetBounds.y;
-        }
-        return longest;
+        float a = Mathf.Abs(latRange.y - latRange.x);
+        float b = Mathf.Abs(lonRange.y - lonRange.x);
+
+        return (a > b) ? a : b;
     }
 
     // A public function used for the UI to change elevation scale
@@ -211,14 +205,6 @@ public class Manager : MonoBehaviour
     // We can snap the volume to be at a fixed edge or always centered
     public void SnapToBB()
     {
-
-        /*
-        Vector3 newPos = (snap_toggle.isOn) ? new Vector3(lonRange.y * 0.5f * scale, elevSet * .5f, (-scaleLAT * latRange.x - (scaleLAT * latRange.y - scaleLAT * latRange.x) * 0.5f) * scale) :
-                                          new Vector3(-(lonRange.x - (lonRange.y - lonRange.x) * (lonSetBounds.y + lonSetBounds.x) / lonSet * .5f) * scale, (elevSetBounds.y - elevSetBounds.x) * .5f + elevSetBounds.x, -(latRange.x - (latRange.y - latRange.x) * (latSetBounds.y + latSetBounds.x) / latSet * .5f) * scale);
-                                          */
-
-
-
 
         Vector3 newPos = new Vector3(
                                 -(((lonRange.y - lonRange.x) * 0.5f) + lonRange.x) * 10f,
@@ -864,7 +850,7 @@ public class Manager : MonoBehaviour
         // So let us just arbitrarily make the camera distance twice of the longest side 
         // of the volume.
 
-        cam.GetComponent<DragMouseOrbit>().SetDistance(GetLongestSide() * 2);
+        cam.GetComponent<DragMouseOrbit>().SetDistance(GetLongestSide() * 2f * scale);
         StartCoroutine(RebuildTopography());
 
     }
